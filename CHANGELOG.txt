@@ -1,0 +1,4 @@
+2011-04-01  1.0.0 Release
+
+ - First release. Supports MSE, PSNR, and SSIM.
+
