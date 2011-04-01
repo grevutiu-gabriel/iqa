@@ -204,6 +204,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\test_ms_ssim.c"
+				>
+			</File>
+			<File
 				RelativePath=".\source\test_mse.c"
 				>
 			</File>
@@ -235,6 +239,10 @@
 			</File>
 			<File
 				RelativePath=".\include\test_decimate.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\test_ms_ssim.h"
 				>
 			</File>
 			<File

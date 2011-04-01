@@ -7,7 +7,8 @@ SRC= \
 	$(SRCDIR)/test_decimate.c \
 	$(SRCDIR)/test_mse.c \
 	$(SRCDIR)/test_psnr.c \
-	$(SRCDIR)/test_ssim.c
+	$(SRCDIR)/test_ssim.c \
+	$(SRCDIR)/test_ms_ssim.c
 
 OBJ = $(SRC:.c=.o)
 

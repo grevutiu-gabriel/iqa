@@ -59,7 +59,8 @@ struct iqa_ssim_args {
 float iqa_mse(const unsigned char *ref, const unsigned char *cmp, int w, int h, int stride);
 
 /**
- * Calculates the Peak Signal-to-Noise-Ratio between 2 equal-sized 8-bit images.
+ * Calculates the Peak Signal-to-Noise-Ratio between 2 equal-sized 8-bit
+ * images.
  * @param ref Original reference image
  * @param cmp Distorted image
  * @param w Width of the images
@@ -77,12 +78,29 @@ float iqa_psnr(const unsigned char *ref, const unsigned char *cmp, int w, int h,
  * @param w Width of the images
  * @param h Height of the images
  * @param stride The length of each horizontal line in the image
- * @param gaussian 0 = 8x8 square window, 1 = 11x11 circular-symmetric Gaussian weighting.
- * @param args Optional SSIM arguments for fine control of the algorithm. 0 for defaults.
- *             Defaults are a=b=g=1.0, L=255, K1=0.01, K2=0.03
+ * @param gaussian 0 = 8x8 square window, 1 = 11x11 circular-symmetric Gaussian
+ * weighting.
+ * @param args Optional SSIM arguments for fine control of the algorithm. 0 for
+ * defaults. Defaults are a=b=g=1.0, L=255, K1=0.01, K2=0.03
  * @return The mean SSIM over the entire image (MSSIM), or NAN if error.
  */
 float iqa_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h, int stride, 
     int gaussian, const struct iqa_ssim_args *args);
+
+/**
+ * Calculates the Multi-Scale Structural SIMilarity between 2 equal-sized 8-bit
+ * images.
+ * See http://www.videoclarity.com/PDF/MS-SSIM%20Asilomar.pdf
+ * @param ref Original reference image
+ * @param cmp Distorted image
+ * @param w Width of the images
+ * @param h Height of the images
+ * @param stride The length of each horizontal line in the image
+ * @param gaussian 0 = 8x8 square window, 1 = 11x11 circular-symmetric Gaussian
+ * weighting.
+ * @return The mean MS-SSIM over the entire image, or NAN if error.
+ */
+float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w,
+    int h, int stride, int gaussian);
 
 #endif /*_IQA_H_*/

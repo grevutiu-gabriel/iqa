@@ -31,30 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_convolve.h"
-#include "test_decimate.h"
-#include "test_mse.h"
-#include "test_psnr.h"
-#include "test_ssim.h"
-#include "test_ms_ssim.h"
-#include <stdio.h>
+#ifndef _TEST_MS_SSIM_H_
+#define _TEST_MS_SSIM_H_
 
-int main()
-{
-    int failures=0;
+int test_ms_ssim();
 
-    printf("\n");
-    failures += test_convolve();
-    failures += test_decimate();
-    failures += test_mse();
-    failures += test_psnr();
-    failures += test_ssim();
-    failures += test_ms_ssim();
-
-    if (failures)
-        printf("\n\nRESULT: *** FAIL (%i) ***\n\n", failures);
-    else
-        printf("\n\nRESULT: Success\n\n");        
-
-    return failures;
-}
+#endif /*_TEST_MS_SSIM_H_*/

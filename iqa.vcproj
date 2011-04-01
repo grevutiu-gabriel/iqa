@@ -168,6 +168,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\ms_ssim.c"
+				>
+			</File>
+			<File
 				RelativePath=".\source\mse.c"
 				>
 			</File>

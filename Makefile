@@ -5,7 +5,8 @@ SRC= \
 	$(SRCDIR)/math_utils.c \
 	$(SRCDIR)/mse.c \
 	$(SRCDIR)/psnr.c \
-	$(SRCDIR)/ssim.c
+	$(SRCDIR)/ssim.c \
+	$(SRCDIR)/ms_ssim.c
 
 OBJ = $(SRC:.c=.o)
 

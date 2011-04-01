@@ -31,30 +31,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_convolve.h"
-#include "test_decimate.h"
-#include "test_mse.h"
-#include "test_psnr.h"
-#include "test_ssim.h"
-#include "test_ms_ssim.h"
-#include <stdio.h>
+#include "iqa.h"
+#include "os.h"
+#include <math.h>
 
-int main()
+float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h, 
+    int stride, int gaussian)
 {
-    int failures=0;
-
-    printf("\n");
-    failures += test_convolve();
-    failures += test_decimate();
-    failures += test_mse();
-    failures += test_psnr();
-    failures += test_ssim();
-    failures += test_ms_ssim();
-
-    if (failures)
-        printf("\n\nRESULT: *** FAIL (%i) ***\n\n", failures);
-    else
-        printf("\n\nRESULT: Success\n\n");        
-
-    return failures;
+    return NAN;
 }
