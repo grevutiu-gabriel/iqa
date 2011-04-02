@@ -34,7 +34,7 @@
 #ifndef _MATH_UTILS_H_
 #define _MATH_UTILS_H_
 
-#include "os.h"
+#include "iqa_os.h"
 #include <math.h>
 
 /**

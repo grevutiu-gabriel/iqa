@@ -32,49 +32,12 @@
  */
 
 #include "iqa.h"
-#include "os.h"
 #include "convolve.h"
 #include "decimate.h"
 #include "math_utils.h"
 #include "ssim.h"
 #include <stdlib.h>
 #include <math.h>
-
-/*
- * Circular-symmetric Gaussian weighting.
- * h(x,y) = hg(x,y)/SUM(SUM(hg)) , for normalization to 1.0
- * hg(x,y) = e^( -0.5*( (x^2+y^2)/sigma^2 ) ) , where sigma was 1.5
- */
-#define GAUSSIAN_LEN 11
-static const float g_gaussian_window[GAUSSIAN_LEN][GAUSSIAN_LEN] = {
-    {0.000001f, 0.000008f, 0.000037f, 0.000112f, 0.000219f, 0.000274f, 0.000219f, 0.000112f, 0.000037f, 0.000008f, 0.000001f},
-    {0.000008f, 0.000058f, 0.000274f, 0.000831f, 0.001619f, 0.002021f, 0.001619f, 0.000831f, 0.000274f, 0.000058f, 0.000008f},
-    {0.000037f, 0.000274f, 0.001296f, 0.003937f, 0.007668f, 0.009577f, 0.007668f, 0.003937f, 0.001296f, 0.000274f, 0.000037f},
-    {0.000112f, 0.000831f, 0.003937f, 0.011960f, 0.023294f, 0.029091f, 0.023294f, 0.011960f, 0.003937f, 0.000831f, 0.000112f},
-    {0.000219f, 0.001619f, 0.007668f, 0.023294f, 0.045371f, 0.056662f, 0.045371f, 0.023294f, 0.007668f, 0.001619f, 0.000219f},
-    {0.000274f, 0.002021f, 0.009577f, 0.029091f, 0.056662f, 0.070762f, 0.056662f, 0.029091f, 0.009577f, 0.002021f, 0.000274f},
-    {0.000219f, 0.001619f, 0.007668f, 0.023294f, 0.045371f, 0.056662f, 0.045371f, 0.023294f, 0.007668f, 0.001619f, 0.000219f},
-    {0.000112f, 0.000831f, 0.003937f, 0.011960f, 0.023294f, 0.029091f, 0.023294f, 0.011960f, 0.003937f, 0.000831f, 0.000112f},
-    {0.000037f, 0.000274f, 0.001296f, 0.003937f, 0.007668f, 0.009577f, 0.007668f, 0.003937f, 0.001296f, 0.000274f, 0.000037f},
-    {0.000008f, 0.000058f, 0.000274f, 0.000831f, 0.001619f, 0.002021f, 0.001619f, 0.000831f, 0.000274f, 0.000058f, 0.000008f},
-    {0.000001f, 0.000008f, 0.000037f, 0.000112f, 0.000219f, 0.000274f, 0.000219f, 0.000112f, 0.000037f, 0.000008f, 0.000001f},
-};
-
-/*
- * Equal weight square window.
- * Each pixel is equally weighted (1/64) so that SUM(x) = 1.0
- */
-#define SQUARE_LEN 8
-static const float g_square_window[SQUARE_LEN][SQUARE_LEN] = {
-    {0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f},
-    {0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f},
-    {0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f},
-    {0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f},
-    {0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f},
-    {0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f},
-    {0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f},
-    {0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f},
-};
 
 
 /* 
@@ -115,7 +78,7 @@ float iqa_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h,
     if (!ref_f || !cmp_f) {
         if (ref_f) free(ref_f);
         if (cmp_f) free(cmp_f);
-        return NAN;
+        return INFINITY;
     }
     for (y=0; y<h; ++y) {
         src_offset = y*stride;
@@ -133,7 +96,7 @@ float iqa_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h,
         if (!low_pass.kernel) {
             free(ref_f);
             free(cmp_f);
-            return NAN;
+            return INFINITY;
         }
         low_pass.w = low_pass.h = scale;
         low_pass.normalized = 0;
@@ -147,7 +110,7 @@ float iqa_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h,
             free(ref_f);
             free(cmp_f);
             free(low_pass.kernel);
-            return NAN;
+            return INFINITY;
         }
         free(low_pass.kernel);
     }
@@ -197,7 +160,7 @@ float _iqa_ssim(float *ref, float *cmp, int w, int h, const struct _kernel *k, c
         if (ref_sigma_sqd) free(ref_sigma_sqd);
         if (cmp_sigma_sqd) free(cmp_sigma_sqd);
         if (sigma_both) free(sigma_both);
-        return NAN;
+        return INFINITY;
     }
 
     /* Calculate mean */

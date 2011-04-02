@@ -141,8 +141,8 @@ static const struct answer ans_key_einstein_args[] = {
 #define BMP_JPG         "jpg.bmp"
 #define BMP_MEANSHIFT   "meanshift.bmp"
 
-static int _test_ssim_22x15(int gaussian, const struct answer *answers, const int digits, const struct iqa_ssim_args *args);
-static int _test_ssim_einstein_bmp(int gaussian, const struct answer *answers, const int digits, const struct iqa_ssim_args *args);
+static int _test_ssim_22x15(int gaussian, const struct answer *answers, const struct iqa_ssim_args *args);
+static int _test_ssim_einstein_bmp(int gaussian, const struct answer *answers, const struct iqa_ssim_args *args);
 
 
 /*----------------------------------------------------------------------------
@@ -153,12 +153,12 @@ int test_ssim()
     int failure = 0;
 
     printf("\nSSIM:\n");
-    failure += _test_ssim_22x15(1, ans_key_22x15_gauss, 5, 0);
-    failure += _test_ssim_22x15(0, ans_key_22x15_linear, 5, 0);
-    failure += _test_ssim_22x15(1, ans_key_22x15_args, 3, &ssim_args);
-    failure += _test_ssim_einstein_bmp(1, ans_key_einstein_gauss, 5, 0);
-    failure += _test_ssim_einstein_bmp(0, ans_key_einstein_linear, 5, 0);
-    failure += _test_ssim_einstein_bmp(1, ans_key_einstein_args, 3, &ssim_args);
+    failure += _test_ssim_22x15(1, ans_key_22x15_gauss, 0);
+    failure += _test_ssim_22x15(0, ans_key_22x15_linear, 0);
+    failure += _test_ssim_22x15(1, ans_key_22x15_args, &ssim_args);
+    failure += _test_ssim_einstein_bmp(1, ans_key_einstein_gauss, 0);
+    failure += _test_ssim_einstein_bmp(0, ans_key_einstein_linear, 0);
+    failure += _test_ssim_einstein_bmp(1, ans_key_einstein_args, &ssim_args);
 
     return failure;
 }
@@ -166,7 +166,7 @@ int test_ssim()
 /*----------------------------------------------------------------------------
  * _test_ssim_22x15
  *---------------------------------------------------------------------------*/
-int _test_ssim_22x15(int gaussian, const struct answer *answers, const int digits, const struct iqa_ssim_args *args)
+int _test_ssim_22x15(int gaussian, const struct answer *answers, const struct iqa_ssim_args *args)
 {
     int x,y;
     int passed, failures=0;
@@ -244,7 +244,7 @@ int _test_ssim_22x15(int gaussian, const struct answer *answers, const int digit
 /*----------------------------------------------------------------------------
  * _test_ssim_einstein_bmp
  *---------------------------------------------------------------------------*/
-int _test_ssim_einstein_bmp(int gaussian, const struct answer *answers, const int digits, const struct iqa_ssim_args *args)
+int _test_ssim_einstein_bmp(int gaussian, const struct answer *answers, const struct iqa_ssim_args *args)
 {
     struct bmp orig, cmp;
     int passed, failures=0;

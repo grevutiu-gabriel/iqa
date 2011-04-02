@@ -202,11 +202,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\math_utils.h"
+				RelativePath=".\include\iqa_os.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\os.h"
+				RelativePath=".\include\math_utils.h"
 				>
 			</File>
 			<File

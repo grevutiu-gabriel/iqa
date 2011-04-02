@@ -46,7 +46,7 @@
 #define IQA_INLINE __inline
 
 #ifndef INFINITY
-    #define INFINITY HUGE_VAL /**< Defined in C99 (Windows is C89) */
+    #define INFINITY (float)HUGE_VAL /**< Defined in C99 (Windows is C89) */
 #endif /*INFINITY*/
 
 #ifndef NAN

@@ -35,7 +35,6 @@
 #include "test_psnr.h"
 #include "hptime.h"
 #include "math_utils.h"
-#include "os.h"
 #include <stdio.h>
 #include <string.h>
 

@@ -32,11 +32,185 @@
  */
 
 #include "iqa.h"
-#include "os.h"
+#include "ssim.h"
+#include "decimate.h"
 #include <math.h>
+#include <stdlib.h>
 
-float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h, 
-    int stride, int gaussian)
+/* Default number of scales */
+#define SCALES  5
+
+/* Low-pass filter for down-sampling */
+#define LPF_LEN 9
+static const float g_lpf[LPF_LEN][LPF_LEN] = {
+     0.001429f, -0.000900f, -0.004181f,  0.014266f,  0.032232f,  0.014266f, -0.004181f, -0.000900f,  0.001429f,
+    -0.000900f,  0.000566f,  0.002632f, -0.008982f, -0.020294f, -0.008982f,  0.002632f,  0.000566f, -0.000900f,
+    -0.004181f,  0.002632f,  0.012232f, -0.041740f, -0.094309f, -0.041740f,  0.012232f,  0.002632f, -0.004181f,
+     0.014266f, -0.008982f, -0.041740f,  0.142431f,  0.321809f,  0.142431f, -0.041740f, -0.008982f,  0.014266f,
+     0.032232f, -0.020294f, -0.094309f,  0.321809f,  0.727097f,  0.321809f, -0.094309f, -0.020294f,  0.032232f,
+     0.014266f, -0.008982f, -0.041740f,  0.142431f,  0.321809f,  0.142431f, -0.041740f, -0.008982f,  0.014266f,
+    -0.004181f,  0.002632f,  0.012232f, -0.041740f, -0.094309f, -0.041740f,  0.012232f,  0.002632f, -0.004181f,
+    -0.000900f,  0.000566f,  0.002632f, -0.008982f, -0.020294f, -0.008982f,  0.002632f,  0.000566f, -0.000900f,
+     0.001429f, -0.000900f, -0.004181f,  0.014266f,  0.032232f,  0.014266f, -0.004181f, -0.000900f,  0.001429f,
+};
+
+/* Alpha, beta, and gamma values for each scale */
+static float g_alphas[] = { 0.0000f, 0.0000f, 0.0000f, 0.0000f, 0.1333f };
+static float g_betas[]  = { 0.0448f, 0.2856f, 0.3001f, 0.2363f, 0.1333f };
+static float g_gammas[] = { 0.0448f, 0.2856f, 0.3001f, 0.2363f, 0.1333f };
+
+
+/* Releases the scaled buffers */
+void _free_buffers(float **buf, int scales)
 {
-    return NAN;
+    int idx;
+    for (idx=0; idx<scales; ++idx)
+        free(buf[idx]);
+}
+
+/* Allocates the scaled buffers. If error, all buffers are free'd */
+int _alloc_buffers(float **buf, int w, int h, int scales)
+{
+    int idx;
+    int cur_w = w;
+    int cur_h = h;
+    for (idx=0; idx<scales; ++idx) {
+        buf[idx] = (float*)malloc(cur_w*cur_h*sizeof(float));
+        if (!buf[idx]) {
+            _free_buffers(buf, idx);
+            return 1;
+        }
+        cur_w/=2;
+        cur_h/=2;
+    }
+    return 0;
+}
+
+/*
+ * MS_SSIM(X,Y) = Lm(x,y)^aM * MULT[j=1->M]( Cj(x,y)^bj  *  Sj(x,y)^gj )
+ * where,
+ *  L = mean
+ *  C = variance
+ *  S = cross-correlation
+ *
+ *  b1=g1=0.0448, b2=g2=0.2856, b3=g3=0.3001, b4=g4=0.2363, a5=b5=g5=0.1333
+ */
+float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h, 
+    int stride, const struct iqa_ms_ssim_args *args)
+{
+    int wang=1;
+    int scales=SCALES;
+    int gauss=1;
+    float *alphas=g_alphas, *betas=g_betas, *gammas=g_gammas;
+    int idx,x,y,cur_w,cur_h,cur_scale;
+    int offset,src_offset;
+    float **ref_imgs, **cmp_imgs; /* Array of pointers to scaled images */
+    float result, msssim=1.0f;
+    struct _kernel lpf, window;
+    struct iqa_ssim_args s_args;
+
+    if (args) {
+        wang   = args->wang;
+        scales = args->scales;
+        gauss  = args->gaussian;
+        alphas = args->alphas;
+        betas  = args->betas;
+        gammas = args->gammas;
+    }
+
+    window.kernel = (float*)g_square_window;
+    window.w = window.h = SQUARE_LEN;
+    window.normalized = 1;
+    window.bnd_opt = KBND_SYMMETRIC;
+    if (gauss) {
+        window.kernel = (float*)g_gaussian_window;
+        window.w = window.h = GAUSSIAN_LEN;
+    }
+
+
+    /* Allocate the scaled image buffers */
+    ref_imgs = (float**)malloc(scales*sizeof(float*));
+    cmp_imgs = (float**)malloc(scales*sizeof(float*));
+    if (!ref_imgs || !cmp_imgs) {
+        if (ref_imgs) free(ref_imgs);
+        if (cmp_imgs) free(cmp_imgs);
+        return INFINITY;
+    }
+    if (_alloc_buffers(ref_imgs, w, h, scales)) {
+        free(ref_imgs);
+        free(cmp_imgs);
+        return INFINITY;
+    }
+    if (_alloc_buffers(cmp_imgs, w, w, scales)) {
+        _free_buffers(ref_imgs, scales);
+        free(ref_imgs);
+        free(cmp_imgs);
+        return INFINITY;
+    }
+
+    /* Copy original images into first scale buffer, forcing stride = width. */
+    for (y=0; y<h; ++y) {
+        src_offset = y*stride;
+        offset = y*w;
+        for (x=0; x<w; ++x, ++offset, ++src_offset) {
+            ref_imgs[0][offset] = (float)ref[src_offset];
+            cmp_imgs[0][offset] = (float)cmp[src_offset];
+        }
+    }
+
+    /* Create scaled versions of the images */
+    cur_w=w;
+    cur_h=h;
+    cur_scale=2;
+    lpf.kernel = (float*)g_lpf;
+    lpf.w = lpf.h = LPF_LEN;
+    lpf.normalized = 1;
+    lpf.bnd_opt = KBND_SYMMETRIC;
+    for (idx=1; idx<scales; ++idx) {
+        if (_iqa_decimate(ref_imgs[idx-1], cur_w, cur_h, cur_scale, &lpf, ref_imgs[idx], 0, 0) ||
+            _iqa_decimate(cmp_imgs[idx-1], cur_w, cur_h, cur_scale, &lpf, cmp_imgs[idx], &cur_w, &cur_h))
+        {
+            _free_buffers(ref_imgs, scales);
+            _free_buffers(cmp_imgs, scales);
+            free(ref_imgs);
+            free(cmp_imgs);
+            return INFINITY;
+        }
+        cur_scale*=2;
+    }
+
+    cur_w=w;
+    cur_h=h;
+    for (idx=0; idx<scales; ++idx) {
+        if (!wang) {
+            /* TODO: Implement */
+            return INFINITY;
+        }
+        else {
+            /* Wang */
+            s_args.alpha = alphas[idx];
+            s_args.beta  = betas[idx];
+            s_args.gamma = gammas[idx];
+            s_args.K1 = 0.01f;
+            s_args.K2 = 0.03f;
+            s_args.L  = 255;
+            s_args.f  = 1; /* Don't resize */
+            result = _iqa_ssim(ref_imgs[idx], cmp_imgs[idx], cur_w, cur_h, &window, &s_args);
+        }
+
+        if (result == INFINITY) {
+            /* TODO */
+            return INFINITY;
+        }
+        msssim *= result;
+        cur_w/=2;
+        cur_h/=2;
+    }
+
+    _free_buffers(ref_imgs, scales);
+    _free_buffers(cmp_imgs, scales);
+    free(ref_imgs);
+    free(cmp_imgs);
+
+    return msssim;
 }

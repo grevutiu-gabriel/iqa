@@ -34,6 +34,8 @@
 #ifndef _IQA_H_
 #define _IQA_H_
 
+#include "iqa_os.h"
+
 /**
  * Allows fine-grain control of the SSIM algorithm.
  */
@@ -45,6 +47,18 @@ struct iqa_ssim_args {
     float K1;       /**< stabilization constant 1 */
     float K2;       /**< stabilization constant 2 */
     int f;          /**< scale factor. 0 uses default scaling */
+};
+
+/**
+ * Allows fine-grain control of the MS-SSIM algorithm.
+ */
+struct iqa_ms_ssim_args {
+    int wang;       /**< 1=original algorithm by Wang, et al. 0=MS-SSIM* by Rouse/Hemami (default). */
+    int scales;     /**< Number of scales to use. Default is 5. */
+    int gaussian;   /**< 1=11x11 Gaussian window (default). 0=8x8 linear window. */
+    float *alphas;  /**< Pointer to array of alpha values for each scale. */
+    float *betas;   /**< Pointer to array of beta values for each scale. */
+    float *gammas;  /**< Pointer to array of gamma values for each scale. */
 };
 
 /**
@@ -82,7 +96,7 @@ float iqa_psnr(const unsigned char *ref, const unsigned char *cmp, int w, int h,
  * weighting.
  * @param args Optional SSIM arguments for fine control of the algorithm. 0 for
  * defaults. Defaults are a=b=g=1.0, L=255, K1=0.01, K2=0.03
- * @return The mean SSIM over the entire image (MSSIM), or NAN if error.
+ * @return The mean SSIM over the entire image (MSSIM), or INFINITY if error.
  */
 float iqa_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h, int stride, 
     int gaussian, const struct iqa_ssim_args *args);
@@ -96,11 +110,11 @@ float iqa_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h,
  * @param w Width of the images
  * @param h Height of the images
  * @param stride The length of each horizontal line in the image
- * @param gaussian 0 = 8x8 square window, 1 = 11x11 circular-symmetric Gaussian
- * weighting.
- * @return The mean MS-SSIM over the entire image, or NAN if error.
+ * @param args Optional MS-SSIM arguments for fine control of the algorithm. 0
+ * for defaults. Defaults are wang=0, scales=5, gaussian=1.
+ * @return The mean MS-SSIM over the entire image, or INFINITY if error.
  */
 float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w,
-    int h, int stride, int gaussian);
+    int h, int stride, const struct iqa_ms_ssim_args *args);
 
 #endif /*_IQA_H_*/
