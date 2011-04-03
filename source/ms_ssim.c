@@ -43,15 +43,15 @@
 /* Low-pass filter for down-sampling */
 #define LPF_LEN 9
 static const float g_lpf[LPF_LEN][LPF_LEN] = {
-     0.001429f, -0.000900f, -0.004181f,  0.014266f,  0.032232f,  0.014266f, -0.004181f, -0.000900f,  0.001429f,
-    -0.000900f,  0.000566f,  0.002632f, -0.008982f, -0.020294f, -0.008982f,  0.002632f,  0.000566f, -0.000900f,
-    -0.004181f,  0.002632f,  0.012232f, -0.041740f, -0.094309f, -0.041740f,  0.012232f,  0.002632f, -0.004181f,
-     0.014266f, -0.008982f, -0.041740f,  0.142431f,  0.321809f,  0.142431f, -0.041740f, -0.008982f,  0.014266f,
-     0.032232f, -0.020294f, -0.094309f,  0.321809f,  0.727097f,  0.321809f, -0.094309f, -0.020294f,  0.032232f,
-     0.014266f, -0.008982f, -0.041740f,  0.142431f,  0.321809f,  0.142431f, -0.041740f, -0.008982f,  0.014266f,
-    -0.004181f,  0.002632f,  0.012232f, -0.041740f, -0.094309f, -0.041740f,  0.012232f,  0.002632f, -0.004181f,
-    -0.000900f,  0.000566f,  0.002632f, -0.008982f, -0.020294f, -0.008982f,  0.002632f,  0.000566f, -0.000900f,
-     0.001429f, -0.000900f, -0.004181f,  0.014266f,  0.032232f,  0.014266f, -0.004181f, -0.000900f,  0.001429f,
+    0.000714f -0.000450f -0.002090f, 0.007132f, 0.016114f, 0.007132f,-0.002090f,-0.000450f, 0.000714f,
+   -0.000450f, 0.000283f, 0.001316f,-0.004490f,-0.010146f,-0.004490f, 0.001316f, 0.000283f,-0.000450f,
+   -0.002090f, 0.001316f, 0.006115f,-0.020867f,-0.047149f,-0.020867f, 0.006115f, 0.001316f,-0.002090f,
+    0.007132f -0.004490f,-0.020867f, 0.071207f, 0.160885f, 0.071207f,-0.020867f,-0.004490f, 0.007132f,
+    0.016114f -0.010146f,-0.047149f, 0.160885f, 0.363505f, 0.160885f,-0.047149f,-0.010146f, 0.016114f,
+    0.007132f -0.004490f,-0.020867f, 0.071207f, 0.160885f, 0.071207f,-0.020867f,-0.004490f, 0.007132f,
+   -0.002090f, 0.001316f, 0.006115f,-0.020867f,-0.047149f,-0.020867f, 0.006115f, 0.001316f,-0.002090f,
+   -0.000450f, 0.000283f, 0.001316f,-0.004490f,-0.010146f,-0.004490f, 0.001316f, 0.000283f,-0.000450f,
+    0.000714f -0.000450f,-0.002090f, 0.007132f, 0.016114f, 0.007132f,-0.002090f,-0.000450f, 0.000714f,
 };
 
 /* Alpha, beta, and gamma values for each scale */
@@ -102,7 +102,7 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
     int scales=SCALES;
     int gauss=1;
     float *alphas=g_alphas, *betas=g_betas, *gammas=g_gammas;
-    int idx,x,y,cur_w,cur_h,cur_scale;
+    int idx,x,y,cur_w,cur_h;
     int offset,src_offset;
     float **ref_imgs, **cmp_imgs; /* Array of pointers to scaled images */
     float result, msssim=1.0f;
@@ -161,14 +161,13 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
     /* Create scaled versions of the images */
     cur_w=w;
     cur_h=h;
-    cur_scale=2;
     lpf.kernel = (float*)g_lpf;
     lpf.w = lpf.h = LPF_LEN;
     lpf.normalized = 1;
     lpf.bnd_opt = KBND_SYMMETRIC;
     for (idx=1; idx<scales; ++idx) {
-        if (_iqa_decimate(ref_imgs[idx-1], cur_w, cur_h, cur_scale, &lpf, ref_imgs[idx], 0, 0) ||
-            _iqa_decimate(cmp_imgs[idx-1], cur_w, cur_h, cur_scale, &lpf, cmp_imgs[idx], &cur_w, &cur_h))
+        if (_iqa_decimate(ref_imgs[idx-1], cur_w, cur_h, 2, &lpf, ref_imgs[idx], 0, 0) ||
+            _iqa_decimate(cmp_imgs[idx-1], cur_w, cur_h, 2, &lpf, cmp_imgs[idx], &cur_w, &cur_h))
         {
             _free_buffers(ref_imgs, scales);
             _free_buffers(cmp_imgs, scales);
@@ -176,7 +175,6 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
             free(cmp_imgs);
             return INFINITY;
         }
-        cur_scale*=2;
     }
 
     cur_w=w;
