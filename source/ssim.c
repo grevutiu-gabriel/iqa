@@ -134,7 +134,7 @@ float _iqa_ssim(float *ref, float *cmp, int w, int h, const struct _kernel *k, c
     int x,y,offset;
     float *ref_mu,*cmp_mu,*ref_sigma_sqd,*cmp_sigma_sqd,*sigma_both;
     double ssim_sum, numerator, denominator;
-    double luminance_comp, contrast_comp, structure_comp, sigma_ref, sigma_cmp;
+    double luminance_comp, contrast_comp, structure_comp, sigma_root;
 
     /* Initialize algorithm parameters */
     if (args) {
@@ -205,13 +205,19 @@ float _iqa_ssim(float *ref, float *cmp, int w, int h, const struct _kernel *k, c
             }
             else {
                 /* User tweaked alpha, beta, or gamma */
-                sigma_ref = sqrt(fabs(ref_sigma_sqd[offset]));
-                sigma_cmp = sqrt(fabs(cmp_sigma_sqd[offset]));
+
+                /* passing a negative number to sqrt() cause a domain error */
+                if (ref_sigma_sqd[offset] < 0.0f)
+                    ref_sigma_sqd[offset] = 0.0f;
+                if (cmp_sigma_sqd[offset] < 0.0f)
+                    cmp_sigma_sqd[offset] = 0.0f;
+                sigma_root = sqrt(ref_sigma_sqd[offset] * cmp_sigma_sqd[offset]);
+
                 luminance_comp = fabs((2.0 * ref_mu[offset] * cmp_mu[offset] + C1) / 
                     (ref_mu[offset]*ref_mu[offset] + cmp_mu[offset]*cmp_mu[offset] + C1));
-                contrast_comp  = fabs((2.0 * sigma_ref * sigma_cmp + C2) / 
+                contrast_comp  = fabs((2.0 * sigma_root + C2) / 
                     (ref_sigma_sqd[offset] + cmp_sigma_sqd[offset] + C2));
-                structure_comp = fabs((sigma_both[offset] + C3) / (sigma_ref * sigma_cmp + C3));
+                structure_comp = fabs((sigma_both[offset] + C3) / (sigma_root + C3));
                 ssim_sum += pow(luminance_comp,(double)alpha) * pow(contrast_comp,(double)beta) * pow(structure_comp,(double)gamma);
             }
         }
