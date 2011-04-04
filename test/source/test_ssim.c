@@ -95,7 +95,6 @@ static const struct answer ans_key_22x15_linear[] = {
     {0.71679f, 5},  /* 2x2 low-pass filter */
 };
 
-/* NOTE: Values verified. Different from Octave due to float precision. */
 static const struct answer ans_key_22x15_args[] = {
     {1.00000f, 5},    /* Identical */
     {0.99870f, 5},    /* Mean Shift +7 */
@@ -125,11 +124,11 @@ static const struct answer ans_key_einstein_linear[] = {
 /* NOTE: Values verified. Different from Octave due to float precision. */
 static const struct answer ans_key_einstein_args[] = {
     {1.00000f, 5},    /* Identical */
-    {0.56512f, 5},    /* Blur */
+    {0.56509f, 5},    /* Blur */
     {0.94412f, 5},    /* Contrast */
-    {0.21325f, 5},    /* Flip Vertical */
-    {0.81310f, 5},    /* Impulse */
-    {0.50410f, 5},    /* JPEG */
+    {0.13106f, 5},    /* Flip Vertical */
+    {0.81263f, 5},    /* Impulse */
+    {0.50202f, 5},    /* JPEG */
     {0.99542f, 5},    /* Mean Shift */
 };
 

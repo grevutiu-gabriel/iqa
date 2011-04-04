@@ -133,7 +133,7 @@ float _iqa_ssim(float *ref, float *cmp, int w, int h, const struct _kernel *k, c
     float C1,C2,C3;
     int x,y,offset;
     float *ref_mu,*cmp_mu,*ref_sigma_sqd,*cmp_sigma_sqd,*sigma_both;
-    double ssim_sum, numerator, denominator;
+    double ssim_sum, sign, numerator, denominator;
     double luminance_comp, contrast_comp, structure_comp, sigma_root;
 
     /* Initialize algorithm parameters */
@@ -213,12 +213,20 @@ float _iqa_ssim(float *ref, float *cmp, int w, int h, const struct _kernel *k, c
                     cmp_sigma_sqd[offset] = 0.0f;
                 sigma_root = sqrt(ref_sigma_sqd[offset] * cmp_sigma_sqd[offset]);
 
-                luminance_comp = fabs((2.0 * ref_mu[offset] * cmp_mu[offset] + C1) / 
-                    (ref_mu[offset]*ref_mu[offset] + cmp_mu[offset]*cmp_mu[offset] + C1));
-                contrast_comp  = fabs((2.0 * sigma_root + C2) / 
-                    (ref_sigma_sqd[offset] + cmp_sigma_sqd[offset] + C2));
-                structure_comp = fabs((sigma_both[offset] + C3) / (sigma_root + C3));
-                ssim_sum += pow(luminance_comp,(double)alpha) * pow(contrast_comp,(double)beta) * pow(structure_comp,(double)gamma);
+                luminance_comp = (2.0 * ref_mu[offset] * cmp_mu[offset] + C1) / 
+                    (ref_mu[offset]*ref_mu[offset] + cmp_mu[offset]*cmp_mu[offset] + C1);
+                contrast_comp  = (2.0 * sigma_root + C2) / 
+                    (ref_sigma_sqd[offset] + cmp_sigma_sqd[offset] + C2);
+                structure_comp = (sigma_both[offset] + C3) / (sigma_root + C3);
+                
+                sign = luminance_comp < 0 ? -1 : 1;
+                luminance_comp = sign * pow(fabs(luminance_comp),(double)alpha);
+                sign = contrast_comp < 0 ? -1 : 1;
+                contrast_comp = sign * pow(fabs(contrast_comp),(double)beta);
+                sign = structure_comp < 0 ? -1 : 1;
+                structure_comp = sign * pow(fabs(structure_comp),(double)gamma);
+
+                ssim_sum += luminance_comp * contrast_comp * structure_comp;
             }
         }
     }
