@@ -34,6 +34,8 @@
 #ifndef _SSIM_H_
 #define _SSIM_H_
 
+#include "convolve.h"
+
 /*
  * Circular-symmetric Gaussian weighting.
  * h(x,y) = hg(x,y)/SUM(SUM(hg)) , for normalization to 1.0
