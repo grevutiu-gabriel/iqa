@@ -46,7 +46,7 @@ struct iqa_ssim_args {
     int L;          /**< dynamic range (2^8 - 1)*/
     float K1;       /**< stabilization constant 1 */
     float K2;       /**< stabilization constant 2 */
-    int f;          /**< scale factor. 0 uses default scaling */
+    int f;          /**< scale factor. 0=default scaling, 1=no scaling */
 };
 
 /**

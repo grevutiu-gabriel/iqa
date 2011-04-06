@@ -98,7 +98,7 @@ int _alloc_buffers(float **buf, int w, int h, int scales)
 float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h, 
     int stride, const struct iqa_ms_ssim_args *args)
 {
-    int wang=1;
+    int wang=0;
     int scales=SCALES;
     int gauss=1;
     float *alphas=g_alphas, *betas=g_betas, *gammas=g_gammas;
@@ -181,11 +181,18 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
     cur_h=h;
     for (idx=0; idx<scales; ++idx) {
         if (!wang) {
-            /* TODO: Implement */
-            return INFINITY;
+            /* MS-SSIM* (Rouse/Hemami) */
+            s_args.alpha = alphas[idx];
+            s_args.beta  = betas[idx];
+            s_args.gamma = gammas[idx];
+            s_args.K1 = 0.0f; /* Force stabilization constants to 0 */
+            s_args.K2 = 0.0f;
+            s_args.L  = 255;
+            s_args.f  = 1; /* Don't resize */
+            result = _iqa_ssim(ref_imgs[idx], cmp_imgs[idx], cur_w, cur_h, &window, &s_args);
         }
         else {
-            /* Wang */
+            /* MS-SSIM (Wang) */
             s_args.alpha = alphas[idx];
             s_args.beta  = betas[idx];
             s_args.gamma = gammas[idx];
@@ -197,8 +204,8 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
         }
 
         if (result == INFINITY) {
-            /* TODO */
-            return INFINITY;
+            msssim = result;
+            break;
         }
         msssim *= result;
         cur_w/=2;

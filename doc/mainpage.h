@@ -48,10 +48,11 @@
  * @li MSE
  * @li PSNR
  * @li SSIM
+ * @li MS-SSIM
+ * @li MS-SSIM*
  *
  * I plan to add the following algorithms in the future:
- * @li Faster (i.e. less precise) version of SSIM
- * @li MS-SSIM
+ * @li Fast SSIM and MS-SSIM
  * @li CW-SSIM
  * @li VQM
  *
@@ -63,6 +64,10 @@
  * Browse the source tree: http://iqa.svn.sourceforge.net/viewvc/iqa/
  *
  * SVN Checkout: @code svn co https://iqa.svn.sourceforge.net/svnroot/iqa iqa @endcode
+ * <br>
+ * @section What's New 1.1.0
+ * @li Added MS-SSIM and MS-SSIM* algorithms.
+ * @li Fixed a bug in SSIM when using custom stabilization constants.
  * <br>
  * @section Examples
  *
