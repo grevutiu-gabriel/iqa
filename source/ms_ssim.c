@@ -65,8 +65,12 @@ struct _context {
     double l;  /* Luminance */
     double c;  /* Contrast */
     double s;  /* Structure */
+    float alpha;
+    float beta;
+    float gamma;
 };
 
+/* Called for each pixel */
 int _ms_ssim_map(const struct _ssim_int *si, void *ctx)
 {
     struct _context *ms_ctx = (struct _context*)ctx;
@@ -76,16 +80,16 @@ int _ms_ssim_map(const struct _ssim_int *si, void *ctx)
     return 0;
 }
 
+/* Called to calculate the final result */
 float _ms_ssim_reduce(int w, int h, void *ctx)
 {
     double size = (double)(w*h);
     struct _context *ms_ctx = (struct _context*)ctx;
-    ms_ctx->l /= size;
-    ms_ctx->c /= size;
-    ms_ctx->s /= size;
-    return 0.0f;
+    ms_ctx->l = pow(ms_ctx->l / size, (double)ms_ctx->alpha);
+    ms_ctx->c = pow(ms_ctx->c / size, (double)ms_ctx->beta);
+    ms_ctx->s = pow(fabs(ms_ctx->s / size), (double)ms_ctx->gamma);
+    return (float)(ms_ctx->l * ms_ctx->c * ms_ctx->s);
 }
-
 
 /* Releases the scaled buffers */
 void _free_buffers(float **buf, int scales)
@@ -132,11 +136,11 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
     int idx,x,y,cur_w,cur_h;
     int offset,src_offset;
     float **ref_imgs, **cmp_imgs; /* Array of pointers to scaled images */
-    float result, msssim;
+    float msssim;
     struct _kernel lpf, window;
     struct iqa_ssim_args s_args;
     struct _map_reduce mr;
-    struct _context *ms_ctxs;
+    struct _context ms_ctx;
     double luminance=1.0, contrast=1.0, structure=1.0;
 
     if (args) {
@@ -159,10 +163,6 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
 
     mr.map     = _ms_ssim_map;
     mr.reduce  = _ms_ssim_reduce;
-    ms_ctxs = (struct _context*)malloc(scales*sizeof(struct _context));
-    if (!ms_ctxs)
-        return INFINITY;
-    memset(ms_ctxs, 0, scales*sizeof(struct _context));
 
     /* Allocate the scaled image buffers */
     ref_imgs = (float**)malloc(scales*sizeof(float*));
@@ -170,20 +170,17 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
     if (!ref_imgs || !cmp_imgs) {
         if (ref_imgs) free(ref_imgs);
         if (cmp_imgs) free(cmp_imgs);
-        free(ms_ctxs);
         return INFINITY;
     }
     if (_alloc_buffers(ref_imgs, w, h, scales)) {
         free(ref_imgs);
         free(cmp_imgs);
-        free(ms_ctxs);
         return INFINITY;
     }
     if (_alloc_buffers(cmp_imgs, w, w, scales)) {
         _free_buffers(ref_imgs, scales);
         free(ref_imgs);
         free(cmp_imgs);
-        free(ms_ctxs);
         return INFINITY;
     }
 
@@ -212,14 +209,22 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
             _free_buffers(cmp_imgs, scales);
             free(ref_imgs);
             free(cmp_imgs);
-            free(ms_ctxs);
             return INFINITY;
         }
     }
 
     cur_w=w;
     cur_h=h;
+    msssim = 1.0;
     for (idx=0; idx<scales; ++idx) {
+
+        ms_ctx.l = 0;
+        ms_ctx.c = 0;
+        ms_ctx.s = 0;
+        ms_ctx.alpha = g_alphas[idx];
+        ms_ctx.beta  = g_betas[idx];
+        ms_ctx.gamma = g_gammas[idx];
+
         if (!wang) {
             /* MS-SSIM* (Rouse/Hemami) */
             s_args.alpha = 1.0f;
@@ -229,8 +234,8 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
             s_args.K2 = 0.0f;
             s_args.L  = 255;
             s_args.f  = 1; /* Don't resize */
-            mr.context = &(ms_ctxs[idx]);
-            result = _iqa_ssim(ref_imgs[idx], cmp_imgs[idx], cur_w, cur_h, &window, &mr, &s_args);
+            mr.context = &ms_ctx;
+            msssim *= _iqa_ssim(ref_imgs[idx], cmp_imgs[idx], cur_w, cur_h, &window, &mr, &s_args);
         }
         else {
             /* MS-SSIM (Wang) */
@@ -241,32 +246,20 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
             s_args.K2 = 0.03f;
             s_args.L  = 255;
             s_args.f  = 1; /* Don't resize */
-            mr.context = &(ms_ctxs[idx]);
-            result = _iqa_ssim(ref_imgs[idx], cmp_imgs[idx], cur_w, cur_h, &window, &mr, &s_args);
+            mr.context = &ms_ctx;
+            msssim *= _iqa_ssim(ref_imgs[idx], cmp_imgs[idx], cur_w, cur_h, &window, &mr, &s_args);
         }
 
-        if (result == INFINITY) {
-            msssim = result;
+        if (msssim == INFINITY)
             break;
-        }
         cur_w/=2;
         cur_h/=2;
     }
-
-    /* Compute final MS_SSIM value */
-    for (idx=0; idx<scales; ++idx) {
-        if (idx==scales-1)
-            luminance *=  pow(ms_ctxs[idx].l,(double)g_alphas[idx]);
-        contrast *=  pow(ms_ctxs[idx].c,(double)g_betas[idx]);
-        structure *=  pow(fabs(ms_ctxs[idx].s),(double)g_gammas[idx]);
-    }
-    msssim = (float)(luminance * contrast * structure);
 
     _free_buffers(ref_imgs, scales);
     _free_buffers(cmp_imgs, scales);
     free(ref_imgs);
     free(cmp_imgs);
-    free(ms_ctxs);
 
     return msssim;
 }
