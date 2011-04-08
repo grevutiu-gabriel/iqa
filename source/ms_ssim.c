@@ -36,6 +36,7 @@
 #include "decimate.h"
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* Default number of scales */
 #define SCALES  5
@@ -131,10 +132,9 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
     int idx,x,y,cur_w,cur_h;
     int offset,src_offset;
     float **ref_imgs, **cmp_imgs; /* Array of pointers to scaled images */
-    float result, msssim, sign;
+    float result, msssim;
     struct _kernel lpf, window;
     struct iqa_ssim_args s_args;
-    double ssim_sum=0.0;
     struct _map_reduce mr;
     struct _context *ms_ctxs;
     double luminance=1.0, contrast=1.0, structure=1.0;
