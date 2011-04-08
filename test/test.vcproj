@@ -262,6 +262,10 @@
 			Name="Octave"
 			>
 			<File
+				RelativePath=".\octave\ms_ssim.m"
+				>
+			</File>
+			<File
 				RelativePath=".\octave\ssim_single.m"
 				>
 			</File>

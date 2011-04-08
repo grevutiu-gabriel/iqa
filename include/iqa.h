@@ -114,7 +114,7 @@ float iqa_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h,
  * for defaults. Defaults are wang=0, scales=5, gaussian=1.
  * @return The mean MS-SSIM over the entire image, or INFINITY if error.
  */
-float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w,
-    int h, int stride, const struct iqa_ms_ssim_args *args);
+float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h, int stride, 
+    const struct iqa_ms_ssim_args *args);
 
 #endif /*_IQA_H_*/

@@ -72,6 +72,24 @@ static const float g_square_window[SQUARE_LEN][SQUARE_LEN] = {
     {0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f, 0.015625f},
 };
 
+/* Holds intermediate SSIM values for map-reduce operation. */
+struct _ssim_int {
+    double l;
+    double c;
+    double s;
+};
+
+/* Defines the pointers to the map-reduce functions. */
+typedef int (*_map)(const struct _ssim_int *, void *);
+typedef float (*_reduce)(int, int, void *);
+
+/* Arguments for map-reduce. The 'context' is user-defined. */
+struct _map_reduce {
+    _map map;
+    _reduce reduce;
+    void *context;
+};
+
 /**
  * Private method that calculates the SSIM value on a pre-processed image.
  * The input images must have stride==width. This method does not scaling.
@@ -81,10 +99,12 @@ static const float g_square_window[SQUARE_LEN][SQUARE_LEN] = {
  * @param w Width of the images
  * @param h Height of the images
  * @param k The kernel used as the window function
+ * @param mr Optional map-reduce functions to use to calculate SSIM. Required
+ *           'args' is not null. Ignored if 'args' is null.
  * @param args Optional SSIM arguments for fine control of the algorithm. 0 for defaults.
  *             Defaults are a=b=g=1.0, L=255, K1=0.01, K2=0.03
  * @return The mean SSIM over the entire image (MSSIM), or NAN if error.
  */
-float _iqa_ssim(float *ref, float *cmp, int w, int h, const struct _kernel *k, const struct iqa_ssim_args *args);
+float _iqa_ssim(float *ref, float *cmp, int w, int h, const struct _kernel *k, const struct _map_reduce *mr, const struct iqa_ssim_args *args);
 
 #endif /* _SSIM_H_ */

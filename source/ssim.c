@@ -40,6 +40,13 @@
 #include <math.h>
 
 
+/* Forward declarations. */
+IQA_INLINE static double _calc_luminance(float, float, float, float);
+IQA_INLINE static double _calc_contrast(double, float, float, float, float);
+IQA_INLINE static double _calc_structure(float, double, float, float, float, float);
+static int _ssim_map(const struct _ssim_int *, void *);
+static float _ssim_reduce(int, int, void *);
+
 /* 
  * SSIM(x,y)=(2*ux*uy + C1)*(2sxy + C2) / (ux^2 + uy^2 + C1)*(sx^2 + sy^2 + C2)
  * where,
@@ -58,11 +65,18 @@ float iqa_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h,
     struct _kernel low_pass;
     struct _kernel window;
     float result;
+    double ssim_sum=0.0;
+    struct _map_reduce mr;
 
     /* Initialize algorithm parameters */
     scale = _max( 1, _round( (float)_min(w,h) / 256.0f ) );
-    if (args && args->f)
-        scale = args->f;
+    if (args) {
+        if(args->f)
+            scale = args->f;
+        mr.map     = _ssim_map;
+        mr.reduce  = _ssim_reduce;
+        mr.context = (void*)&ssim_sum;
+    }
     window.kernel = (float*)g_square_window;
     window.w = window.h = SQUARE_LEN;
     window.normalized = 1;
@@ -115,7 +129,7 @@ float iqa_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h,
         free(low_pass.kernel);
     }
 
-    result = _iqa_ssim(ref_f, cmp_f, w, h, &window, args);
+    result = _iqa_ssim(ref_f, cmp_f, w, h, &window, &mr, args);
     
     free(ref_f);
     free(cmp_f);
@@ -123,52 +137,9 @@ float iqa_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h,
     return result;
 }
 
-/* _calc_luminance */
-IQA_INLINE static double _calc_luminance(float mu1, float mu2, float C1, float alpha)
-{
-    double result;
-    float sign;
-    /* For MS-SSIM* */
-    if (C1 == 0 && mu1*mu1 == 0 && mu2*mu2 == 0)
-        return 1.0;
-    result = (2.0 * mu1 * mu2 + C1) / (mu1*mu1 + mu2*mu2 + C1);
-    sign = result < 0.0 ? -1.0f : 1.0f;
-    return sign * pow(fabs(result),(double)alpha);
-}
-
-/* _calc_contrast */
-IQA_INLINE static double _calc_contrast(double sigma_comb_12, float sigma1_sqd, float sigma2_sqd, float C2, float beta)
-{
-    double result;
-    float sign;
-    /* For MS-SSIM* */
-    if (C2 == 0 && sigma1_sqd + sigma2_sqd == 0)
-        return 1.0;
-    result = (2.0 * sigma_comb_12 + C2) / (sigma1_sqd + sigma2_sqd + C2);
-    sign = result < 0.0 ? -1.0f : 1.0f;
-    return sign * pow(fabs(result),(double)beta);
-}
-
-/* _calc_structure */
-IQA_INLINE static double _calc_structure(float sigma_12, double sigma_comb_12, float sigma1, float sigma2, float C3, float gamma)
-{
-    double result;
-    float sign;
-    /* For MS-SSIM* */
-    if (C3 == 0 && sigma_comb_12 == 0) {
-        if (sigma1 == 0 && sigma2 == 0)
-            return 1.0;
-        else if (sigma1 == 0 || sigma2 == 0)
-            return 0.0;
-    }
-    result = (sigma_12 + C3) / (sigma_comb_12 + C3);
-    sign = result < 0.0 ? -1.0f : 1.0f;
-    return sign * pow(fabs(result),(double)gamma);
-}
-
 
 /* _iqa_ssim */
-float _iqa_ssim(float *ref, float *cmp, int w, int h, const struct _kernel *k, const struct iqa_ssim_args *args)
+float _iqa_ssim(float *ref, float *cmp, int w, int h, const struct _kernel *k, const struct _map_reduce *mr, const struct iqa_ssim_args *args)
 {
     float alpha=1.0f, beta=1.0f, gamma=1.0f;
     int L=255;
@@ -178,9 +149,12 @@ float _iqa_ssim(float *ref, float *cmp, int w, int h, const struct _kernel *k, c
     float *ref_mu,*cmp_mu,*ref_sigma_sqd,*cmp_sigma_sqd,*sigma_both;
     double ssim_sum, numerator, denominator;
     double luminance_comp, contrast_comp, structure_comp, sigma_root;
+    struct _ssim_int sint;
 
     /* Initialize algorithm parameters */
     if (args) {
+        if (!mr)
+            return INFINITY;
         alpha = args->alpha;
         beta  = args->beta;
         gamma = args->gamma;
@@ -260,7 +234,12 @@ float _iqa_ssim(float *ref, float *cmp, int w, int h, const struct _kernel *k, c
                 contrast_comp  = _calc_contrast(sigma_root, ref_sigma_sqd[offset], cmp_sigma_sqd[offset], C2, beta);
                 structure_comp = _calc_structure(sigma_both[offset], sigma_root, ref_sigma_sqd[offset], cmp_sigma_sqd[offset], C3, gamma);
 
-                ssim_sum += luminance_comp * contrast_comp * structure_comp;
+                sint.l = luminance_comp;
+                sint.c = contrast_comp;
+                sint.s = structure_comp;
+
+                if (mr->map(&sint, mr->context))
+                    return INFINITY;
             }
         }
     }
@@ -271,5 +250,73 @@ float _iqa_ssim(float *ref, float *cmp, int w, int h, const struct _kernel *k, c
     free(cmp_sigma_sqd);
     free(sigma_both);
 
-    return (float)(ssim_sum / (double)(w*h));
+    if (!args)
+        return (float)(ssim_sum / (double)(w*h));
+    return mr->reduce(w, h, mr->context);
+}
+
+
+/* _ssim_map */
+int _ssim_map(const struct _ssim_int *si, void *ctx)
+{
+    double *ssim_sum = (double*)ctx;
+    *ssim_sum += si->l * si->c * si->s;
+    return 0;
+}
+
+/* _ssim_reduce */
+float _ssim_reduce(int w, int h, void *ctx)
+{
+    double *ssim_sum = (double*)ctx;
+    return (float)(*ssim_sum / (double)(w*h));
+}
+
+
+/* _calc_luminance */
+IQA_INLINE static double _calc_luminance(float mu1, float mu2, float C1, float alpha)
+{
+    double result;
+    float sign;
+    /* For MS-SSIM* */
+    if (C1 == 0 && mu1*mu1 == 0 && mu2*mu2 == 0)
+        return 1.0;
+    result = (2.0 * mu1 * mu2 + C1) / (mu1*mu1 + mu2*mu2 + C1);
+    if (alpha == 1.0f)
+        return result;
+    sign = result < 0.0 ? -1.0f : 1.0f;
+    return sign * pow(fabs(result),(double)alpha);
+}
+
+/* _calc_contrast */
+IQA_INLINE static double _calc_contrast(double sigma_comb_12, float sigma1_sqd, float sigma2_sqd, float C2, float beta)
+{
+    double result;
+    float sign;
+    /* For MS-SSIM* */
+    if (C2 == 0 && sigma1_sqd + sigma2_sqd == 0)
+        return 1.0;
+    result = (2.0 * sigma_comb_12 + C2) / (sigma1_sqd + sigma2_sqd + C2);
+    if (beta == 1.0f)
+        return result;
+    sign = result < 0.0 ? -1.0f : 1.0f;
+    return sign * pow(fabs(result),(double)beta);
+}
+
+/* _calc_structure */
+IQA_INLINE static double _calc_structure(float sigma_12, double sigma_comb_12, float sigma1, float sigma2, float C3, float gamma)
+{
+    double result;
+    float sign;
+    /* For MS-SSIM* */
+    if (C3 == 0 && sigma_comb_12 == 0) {
+        if (sigma1 == 0 && sigma2 == 0)
+            return 1.0;
+        else if (sigma1 == 0 || sigma2 == 0)
+            return 0.0;
+    }
+    result = (sigma_12 + C3) / (sigma_comb_12 + C3);
+    if (gamma == 1.0f)
+        return result;
+    sign = result < 0.0 ? -1.0f : 1.0f;
+    return sign * pow(fabs(result),(double)gamma);
 }
