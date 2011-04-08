@@ -40,7 +40,7 @@ int _iqa_decimate(float *img, int w, int h, int factor, const struct _kernel *k,
     int sw = w/factor + (w&1);
     int sh = h/factor + (h&1);
     int dst_offset;
-    float *filtered=img, *dst=img;
+    float *dst=img;
 
     if (result)
         dst = result;

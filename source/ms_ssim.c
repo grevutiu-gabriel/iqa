@@ -141,7 +141,6 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
     struct iqa_ssim_args s_args;
     struct _map_reduce mr;
     struct _context ms_ctx;
-    double luminance=1.0, contrast=1.0, structure=1.0;
 
     if (args) {
         wang   = args->wang;
