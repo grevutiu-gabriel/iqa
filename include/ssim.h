@@ -100,7 +100,7 @@ struct _map_reduce {
  * @param h Height of the images
  * @param k The kernel used as the window function
  * @param mr Optional map-reduce functions to use to calculate SSIM. Required
- *           'args' is not null. Ignored if 'args' is null.
+ *           if 'args' is not null. Ignored if 'args' is null.
  * @param args Optional SSIM arguments for fine control of the algorithm. 0 for defaults.
  *             Defaults are a=b=g=1.0, L=255, K1=0.01, K2=0.03
  * @return The mean SSIM over the entire image (MSSIM), or NAN if error.

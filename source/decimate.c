@@ -39,44 +39,21 @@ int _iqa_decimate(float *img, int w, int h, int factor, const struct _kernel *k,
     int x,y;
     int sw = w/factor + (w&1);
     int sh = h/factor + (h&1);
-    int err, src_offset, dst_offset;
+    int dst_offset;
     float *filtered=img, *dst=img;
 
     if (result)
         dst = result;
 
-    /* Filter: If no result buffer given, then there is no need to filter into
-     * a separate buffer since we are going to overwrite the original image
-     * anyways.
-     */
-    if (k) {
-        if (result) {
-            filtered = (float*)malloc(w*h*sizeof(float));
-            if (!filtered)
-                return 1;
-            err = _iqa_img_filter(img, w, h, k, filtered);
-        }
-        else
-            err = _iqa_img_filter(img, w, h, k, 0);
-        if (err) {
-            if (result) free(filtered);
-            return err;
-        }
-    }
-
     /* Downsample */
     for (y=0; y<sh; ++y) {
-        src_offset = y*factor*w;
         dst_offset = y*sw;
-        for (x=0; x<sw; ++x,++dst_offset,src_offset+=factor) {
-            dst[dst_offset] = filtered[src_offset];
+        for (x=0; x<sw; ++x,++dst_offset) {
+            dst[dst_offset] = _iqa_filter_pixel(img, w, h, x*factor, y*factor, k, 1.0f);
         }
     }
     
-    if (k && result)
-        free(filtered);
     if (rw) *rw = sw;
     if (rh) *rh = sh;
-
     return 0;
 }

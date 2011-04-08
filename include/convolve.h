@@ -79,8 +79,33 @@ void _iqa_convolve(float *img, int w, int h, const struct _kernel *k, float *res
  * bottom edges) are chosen based on the 'bnd_opt' and 'bnd_const' members of
  * the kernel structure. The resulting array is the same size as the input
  * image.
+ *
+ * @param img Image to modify
+ * @param w Image width
+ * @param h Image height
+ * @param k The kernel to apply
+ * @param result Buffer to hold the resulting image ((w-kw)*(h-kh), where kw
+ *               and kh are the kernel width and height). If 0, the result
+ *               will be written to the original image buffer.
+ * @return 0 if successful. Non-zero otherwise.
  */
 int _iqa_img_filter(float *img, int w, int h, const struct _kernel *k, float *result);
+
+/**
+ * Returns the filtered version of the specified pixel. If no kernel is given,
+ * the raw pixel value is returned.
+ * 
+ * @param img Source image
+ * @param w Image width
+ * @param h Image height
+ * @param x The x location of the pixel to filter
+ * @param y The y location of the pixel to filter
+ * @param k Optional. The convolution kernel to apply to the pixel.
+ * @param kscale The scale of the kernel (for normalization). 1 for normalized
+ *               kernels. Required if 'k' is not null.
+ * @return The filtered pixel value.
+ */
+float _iqa_filter_pixel(const float *img, int w, int h, int x, int y, const struct _kernel *k, const float kscale);
 
 
 #endif /*_CONVOLVE_H_*/
