@@ -1,6 +1,6 @@
-function [l, c, s] = ssim_wang(img1, img2, a, b, g)
-    C1 = (0.01*255)^2;
-    C2 = (0.03*255)^2;
+function lcs = ssim(img1, img2, K, a, b, g)
+    C1 = (K(1)*255)^2;
+    C2 = (K(2)*255)^2;
     C3 = C2/2;
     window = fspecial('gaussian', 11, 1.5);
     window = window/sum(sum(window));
@@ -19,18 +19,36 @@ function [l, c, s] = ssim_wang(img1, img2, a, b, g)
     
     sigma1 = sigma1_sq.^0.5;
     sigma2 = sigma2_sq.^0.5;
-    lum = (2*mu1_mu2 + C1) ./ (mu1_sq + mu2_sq + C1);
-    con = (2*sigma1.*sigma2 + C2) ./ (sigma1_sq + sigma2_sq + C2);
-    stc = (sigma12 + C3) ./ (sigma1.*sigma2 + C3);
-    [M,N] = size(lum);
-    aa = repmat(a,M,N);
-    bb = repmat(b,M,N);
-    gg = repmat(g,M,N);
-    ssim_map = real(lum.^aa) .* real(con.^bb) .* real(stc.^gg);
-end
-
-function ssim = ssim_rouse(img1, img2, weight)
-    ssim = ones(2,2).*weight;
+    
+    % Use MS-SSIM* if constants are 0
+    if (C1==0 && C2==0)        
+        index = (mu1_sq + mu2_sq > 0);
+        lum = ones(size(mu1_sq));
+        lum(index) = (2*mu1_mu2(index)) ./ (mu1_sq(index) + mu2_sq(index));
+        
+        index = (sigma1_sq + sigma2_sq > 0);
+        con = ones(size(mu1_sq));
+        con(index) = (2*sigma1(index).*sigma2(index)) ./ (sigma1_sq(index) + sigma2_sq(index));
+        
+        % First set 1 and calculated values.
+        index = (sigma1 ~= 0) & (sigma2 ~= 0);
+        stc = ones(size(mu1_sq));
+        stc(index) = sigma12(index) ./ (sigma1(index).*sigma2(index));
+        % Now set 0 values.
+        index = ~((sigma1~=0)&(sigma2==0)) | ((sigma1==0)&(sigma2~=0));
+        stc = index .* stc;
+    else
+        % MS-SSIM (Wang)
+        lum = (2*mu1_mu2 + C1) ./ (mu1_sq + mu2_sq + C1);
+        con = (2*sigma1.*sigma2 + C2) ./ (sigma1_sq + sigma2_sq + C2);
+        stc = (sigma12 + C3) ./ (sigma1.*sigma2 + C3);
+    end
+    
+    [M N] = size(lum);
+    lum = sum(sum(lum))/(M*N);
+    con = sum(sum(con))/(M*N);
+    stc = sum(sum(stc))/(M*N);
+    lcs = real(lum^a) * real(con^b) * real(stc^g);
 end
 
 
@@ -39,7 +57,7 @@ end
 %==============================================================================
 function msssim = ms_ssim(img1, img2, wang)
 
-if (nargin < 2 || nargin > 4)
+if (nargin < 2 || nargin > 3)
     msssim = -Inf;
     return;
 end
@@ -69,15 +87,14 @@ lpf = lod * lod';
 lpf = lpf/sum(sum(lpf));
 
 % Run SSIM on each scale.
+msssim = 1;
 for n = 1:scale
     if (wang == 1)
-        ssim{n} = ssim_wang(img1,img2,alphas(n),betas(n),gammas(n));
+        msssim = msssim * ssim(img1,img2,[0.01 0.03],alphas(n),betas(n),gammas(n));
     else
-        ssim{n} = ssim_rouse(img1,img2,alphas(n),betas(n),gammas(n));
+        msssim = msssim * ssim(img1,img2,[0 0],alphas(n),betas(n),gammas(n));
     end
-    
-    msssim_map = msssim_map.*ssim(n);
-    
+        
     % Downsample
     img1 = imfilter(img1,lpf,'symmetric','same');
     img2 = imfilter(img2,lpf,'symmetric','same');
@@ -85,5 +102,4 @@ for n = 1:scale
     img2 = img2(1:2:end,1:2:end);
 end
 
-msssim = mean2(msssim_map);
 return;
