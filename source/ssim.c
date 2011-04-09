@@ -116,7 +116,7 @@ float iqa_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h,
         low_pass.normalized = 0;
         low_pass.bnd_opt = KBND_SYMMETRIC;
         for (offset=0; offset<scale*scale; ++offset)
-            low_pass.kernel[offset] = 1.0f;
+            low_pass.kernel[offset] = 1.0f/(scale*scale);
 
         /* Resample */
         if (_iqa_decimate(ref_f, w, h, scale, &low_pass, 0, 0, 0) ||

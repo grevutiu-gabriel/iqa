@@ -278,6 +278,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\octave\test_ms_ssim.m"
+				>
+			</File>
+			<File
 				RelativePath=".\octave\test_mse.m"
 				>
 			</File>

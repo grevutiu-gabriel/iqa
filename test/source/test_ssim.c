@@ -132,6 +132,12 @@ static const struct answer ans_key_einstein_args[] = {
     {0.99542f, 5},    /* Mean Shift */
 };
 
+static const struct answer ans_key_courtright[] = {
+    {1.00000f, 5},    /* Identical */
+    {0.74989f, 2},    /* Noise (rounding error) */
+};
+
+
 #define BMP_ORIGINAL    "einstein.bmp"
 #define BMP_BLUR        "blur.bmp"
 #define BMP_CONTRAST    "contrast.bmp"
@@ -139,9 +145,12 @@ static const struct answer ans_key_einstein_args[] = {
 #define BMP_IMPULSE     "impulse.bmp"
 #define BMP_JPG         "jpg.bmp"
 #define BMP_MEANSHIFT   "meanshift.bmp"
+#define BMP_CR_ORIGINAL "Courtright.bmp"
+#define BMP_CR_NOISE    "Courtright_Noise.bmp"
 
 static int _test_ssim_22x15(int gaussian, const struct answer *answers, const struct iqa_ssim_args *args);
 static int _test_ssim_einstein_bmp(int gaussian, const struct answer *answers, const struct iqa_ssim_args *args);
+static int _test_ssim_courtright_bmp(int gaussian, const struct answer *answers, const struct iqa_ssim_args *args);
 
 
 /*----------------------------------------------------------------------------
@@ -158,6 +167,7 @@ int test_ssim()
     failure += _test_ssim_einstein_bmp(1, ans_key_einstein_gauss, 0);
     failure += _test_ssim_einstein_bmp(0, ans_key_einstein_linear, 0);
     failure += _test_ssim_einstein_bmp(1, ans_key_einstein_args, &ssim_args);
+    failure += _test_ssim_courtright_bmp(1, ans_key_courtright, 0);
 
     return failure;
 }
@@ -368,6 +378,56 @@ int _test_ssim_einstein_bmp(int gaussian, const struct answer *answers, const st
         result = iqa_ssim(orig.img, cmp.img, orig.w, orig.h, orig.stride, gaussian, args);
         end = hpt_get_time();
         passed = _cmp_float(result, answers[6].value, answers[6].precision) ? 0 : 1;
+        printf("\t\t%.5f  (%.3lf ms)\t%s\n", 
+            result, 
+            hpt_elapsed_time(start,end,hpt_get_frequency()) * 1000.0,
+            passed?"PASS":"FAILED");
+        failures += passed?0:1;
+        free_bmp(&cmp);
+    }
+
+    free_bmp(&orig);
+    return failures;
+}
+
+/*----------------------------------------------------------------------------
+ * _test_ssim_courtright_bmp
+ *---------------------------------------------------------------------------*/
+int _test_ssim_courtright_bmp(int gaussian, const struct answer *answers, const struct iqa_ssim_args *args)
+{
+    struct bmp orig, cmp;
+    int passed, failures=0;
+    float result;
+    unsigned long long start, end;
+
+    printf("\tCourtright (%s%s):\n", gaussian?"Gaussian":"Linear",args?" - Custom Args":"");
+
+    if (load_bmp(BMP_CR_ORIGINAL, &orig)) {
+        printf("FAILED to load \'%s\'\n", BMP_CR_ORIGINAL);
+        return 1;
+    }
+
+    printf("\t  Identical: ");
+    start = hpt_get_time();
+    result = iqa_ssim(orig.img, orig.img, orig.w, orig.h, orig.stride, gaussian, args);
+    end = hpt_get_time();
+    passed = _cmp_float(result, answers[0].value, answers[0].precision) ? 0 : 1;
+    printf("\t\t%.5f  (%.3lf ms)\t%s\n", 
+        result, 
+        hpt_elapsed_time(start,end,hpt_get_frequency()) * 1000.0,
+        passed?"PASS":"FAILED");
+    failures += passed?0:1;
+
+    printf("\t  Noise: ");
+    if (load_bmp(BMP_CR_NOISE, &cmp)) {
+        printf("FAILED to load \'%s\'\n", BMP_CR_NOISE);
+        failures++;
+    }
+    else {
+        start = hpt_get_time();
+        result = iqa_ssim(orig.img, cmp.img, orig.w, orig.h, orig.stride, gaussian, args);
+        end = hpt_get_time();
+        passed = _cmp_float(result, answers[1].value, answers[1].precision) ? 0 : 1;
         printf("\t\t%.5f  (%.3lf ms)\t%s\n", 
             result, 
             hpt_elapsed_time(start,end,hpt_get_frequency()) * 1000.0,

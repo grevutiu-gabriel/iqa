@@ -54,11 +54,11 @@ struct iqa_ssim_args {
  */
 struct iqa_ms_ssim_args {
     int wang;       /**< 1=original algorithm by Wang, et al. 0=MS-SSIM* by Rouse/Hemami (default). */
-    int scales;     /**< Number of scales to use. Default is 5. */
     int gaussian;   /**< 1=11x11 Gaussian window (default). 0=8x8 linear window. */
-    float *alphas;  /**< Pointer to array of alpha values for each scale. */
-    float *betas;   /**< Pointer to array of beta values for each scale. */
-    float *gammas;  /**< Pointer to array of gamma values for each scale. */
+    int scales;     /**< Number of scales to use. Default is 5. */
+    const float *alphas;  /**< Pointer to array of alpha values for each scale. Required is 'scales' isn't 5. */
+    const float *betas;   /**< Pointer to array of beta values for each scale. Required is 'scales' isn't 5. */
+    const float *gammas;  /**< Pointer to array of gamma values for each scale. Required is 'scales' isn't 5. */
 };
 
 /**

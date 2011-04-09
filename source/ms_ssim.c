@@ -132,7 +132,7 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
     int wang=0;
     int scales=SCALES;
     int gauss=1;
-    float *alphas=g_alphas, *betas=g_betas, *gammas=g_gammas;
+    const float *alphas=g_alphas, *betas=g_betas, *gammas=g_gammas;
     int idx,x,y,cur_w,cur_h;
     int offset,src_offset;
     float **ref_imgs, **cmp_imgs; /* Array of pointers to scaled images */
@@ -144,11 +144,14 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
 
     if (args) {
         wang   = args->wang;
-        scales = args->scales;
         gauss  = args->gaussian;
-        alphas = args->alphas;
-        betas  = args->betas;
-        gammas = args->gammas;
+        scales = args->scales;
+        if (args->alphas)
+            alphas = args->alphas;
+        if (args->betas)
+            betas  = args->betas;
+        if (args->gammas)
+            gammas = args->gammas;
     }
 
     window.kernel = (float*)g_square_window;
@@ -220,9 +223,9 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
         ms_ctx.l = 0;
         ms_ctx.c = 0;
         ms_ctx.s = 0;
-        ms_ctx.alpha = g_alphas[idx];
-        ms_ctx.beta  = g_betas[idx];
-        ms_ctx.gamma = g_gammas[idx];
+        ms_ctx.alpha = alphas[idx];
+        ms_ctx.beta  = betas[idx];
+        ms_ctx.gamma = gammas[idx];
 
         if (!wang) {
             /* MS-SSIM* (Rouse/Hemami) */

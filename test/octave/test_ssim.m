@@ -29,6 +29,8 @@ img_flipvert = imread('flipvertical.bmp');
 img_impulse = imread('impulse.bmp');
 img_jpg = imread('jpg.bmp');
 img_meanshift = imread('meanshift.bmp');
+img_cr_orig = imread('Courtright.bmp');
+img_cr_noise = imread('Courtright_Noise.bmp');
 
 
 disp("\n--- 11x11 Gaussian sampling --\n");
@@ -66,6 +68,12 @@ mssim = ssim_single(img_orig, img_jpg)
 
 disp("\nEinstein (meanshift):");
 mssim = ssim_single(img_orig, img_meanshift)
+
+disp("\nCourtright (identical):");
+mssim = ssim_single(img_cr_orig, img_cr_orig)
+
+disp("\nCourtright (noise):");
+mssim = ssim_single(img_cr_orig, img_cr_noise)
 
 
 disp("\n--- 8x8 Linear sampling --\n");
@@ -151,3 +159,4 @@ mssim = ssim_single(img_orig, img_jpg, K, window, L, a, b, g)
 
 disp("\nEinstein (meanshift):");
 mssim = ssim_single(img_orig, img_meanshift, K, window, L, a, b, g)
+
