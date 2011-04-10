@@ -116,7 +116,7 @@ float iqa_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int h,
  * http://foulard.ece.cornell.edu/publications/dmr_hvei2008_paper.pdf
  *
  * @note 1. The images must have the same width, height, and stride.
- * @note 2. The minimum image width or height is 2^scales * filter, where 'filter' is 11
+ * @note 2. The minimum image width or height is 2^(scales-1) * filter, where 'filter' is 11
  * if a Gaussian window is being used, or 9 otherwise.
  * @param ref Original reference image
  * @param cmp Distorted image
