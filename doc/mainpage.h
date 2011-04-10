@@ -74,7 +74,10 @@
  * <br>
  * @section what What's New in 1.1.0
  * @li Added MS-SSIM and MS-SSIM* algorithms.
- * @li Fixed a bug in SSIM when using custom stabilization constants.
+ * @li Fixed a bug in SSIM when using custom stabilization constants that caused inflated results.
+ * @li Fixed a bug where SSIM returned NAN on error instead of INFINITY. NAN fails all comparisons, so it was impossible for an application to determine if an error occurred.
+ * @li Increased the speed of image decimation.
+ * @li Added more unit tests.
  *
  * <br>
  *

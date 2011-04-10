@@ -222,6 +222,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\doc\build.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Doxyfile"
 				>
 			</File>

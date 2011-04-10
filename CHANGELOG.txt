@@ -1,4 +1,15 @@
-2011-04-01  1.0.0 Release
+2011-04-09  1.1.0
+
+ - Added MS-SSIM algorithm.
+ - Added MS-SSIM* algorithm.
+ - Fixed bug (#3269715) that caused SSIM to return inflated results when using
+   custom SSIM arguments.
+ - Fixed bug (#3269702) where the SSIM algorithm was returning NAN instead of
+   INFINITY on error. Since NAN always fails comparisons (even with itself),
+   there was no way for an application to determine if an error occurred.
+ - Improved the performace of the decimate operation.
+
+2011-04-01  1.0.0
 
  - First release. Supports MSE, PSNR, and SSIM.
 
