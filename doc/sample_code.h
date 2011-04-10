@@ -31,20 +31,57 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "iqa.h"
-
-/* MSE(a,b) = 1/N * SUM((a-b)^2) */
-float iqa_mse(const unsigned char *ref, const unsigned char *cmp, int w, int h, int stride)
-{
-    int error, offset;
-    unsigned long long sum=0;
-    int ww,hh;
-    for (hh=0; hh<h; ++hh) {
-        offset = hh*stride;
-        for (ww=0; ww<w; ++ww, ++offset) {
-            error = ref[offset] - cmp[offset];
-            sum += error * error;
-        }
-    }
-    return (float)( (double)sum / (double)(w*h) );
-}
+/**
+ * @page sample_code Sample Code
+ * 
+ * All the IQA algorithm functions follow a similar prototype:
+ * @code iqa_<algorithm>( <reference image>, <modified image>, <width>, <height>, <stride>, <other info>);
+ * @endcode
+ *
+ * @li iqa_mse() - Mean Squared Error
+ * @li iqa_psnr() - Peak Signal-to-Noise Ration
+ * @li iqa_ssim() - Structural SIMilarity
+ * @li iqa_ms_ssim() - Multi-Scale Structure SIMilarity
+ *
+ * The only header file your code should need to include is "iqa.h". This file defines the main API for IQA.
+ *
+ * IQA is compiled as a static library so it is linked directly into your application (there is no *.so or *.dll).
+ *
+ * <br>
+ * @section example_1 Example 1
+ * Here's a simple example showing how to calculate PSNR:
+ *
+ * @code
+ * #include "iqa.h"
+ *
+ * // Load reference and modified images.
+ *
+ * float psnr = iqa_psnr(img_ref, img_mod, width, height, stride);
+ * @endcode
+ *
+ * That's it (seriously).
+ * 
+ * <br>
+ * @section example_2 Example 2
+ * Some algorithms support additional configuration parameters. Here's an example that calculates the SSIM index using different weighting factors (a=0.5, b=1.34, c=0.5):
+  *
+ * @code
+ * #include "iqa.h"
+ *
+ * float ssim;
+ * struct iqa_ssim_args args;
+ * args.alpha = 0.5f;
+ * args.beta  = 1.34f;
+ * args.gamma = 0.5f;
+ * args.L  = 255;   // default
+ * args.K1 = 0.01;  // default
+ * args.K2 = 0.03;  // default
+ * args.f  = 0;     // default
+ *
+ * // Load reference and modified images.
+ *
+ * ssim = iqa_ssim(img_ref, img_mod, width, height, stride, 1, &args);
+ * if (ssim == INFINITY)
+ *     // Error
+ * @endcode
+ */

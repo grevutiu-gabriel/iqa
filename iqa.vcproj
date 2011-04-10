@@ -218,11 +218,19 @@
 			Name="Documentation"
 			>
 			<File
+				RelativePath=".\doc\algorithms.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Doxyfile"
 				>
 			</File>
 			<File
 				RelativePath=".\doc\mainpage.h"
+				>
+			</File>
+			<File
+				RelativePath=".\doc\sample_code.h"
 				>
 			</File>
 		</Filter>

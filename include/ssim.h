@@ -92,8 +92,15 @@ struct _map_reduce {
 
 /**
  * Private method that calculates the SSIM value on a pre-processed image.
- * The input images must have stride==width. This method does not scaling.
+ *
+ * The input images must have stride==width. This method does not scale.
+ *
  * @note Image buffers are modified.
+ *
+ * Map-reduce is used for doing the final SSIM calculation. The map function is
+ * called for every pixel, and the reduce is called at the end. The context is
+ * caller-defined and *not* modified by this method.
+ *
  * @param ref Original reference image
  * @param cmp Distorted image
  * @param w Width of the images

@@ -40,6 +40,30 @@
 #include <stdio.h>
 #include <string.h>
 
+
+static const int img_width = 22;
+static const int img_height = 16;
+static const int img_stride = 23;
+static const unsigned char img_22x16[] = {
+    27, 25, 83, 56, 139, 147, 119, 153, 147, 132, 113, 147, 160, 163, 169, 151, 148, 120, 113, 149, 132, 145, 0,
+    0, 0, 25, 25, 73, 49, 148, 145, 126, 127, 113, 110, 116, 102, 99, 118, 161, 149, 149, 129, 114, 137, 0,
+    136, 154, 0, 0, 24, 29, 76, 63, 143, 137, 114, 117, 116, 117, 147, 142, 119, 98, 163, 139, 147, 137, 0,
+    114, 117, 141, 147, 0, 0, 23, 23, 66, 51, 144, 144, 102, 95, 104, 130, 147, 161, 129, 125, 85, 131, 0,
+    97, 111, 119, 107, 132, 144, 0, 0, 24, 26, 36, 104, 135, 147, 110, 136, 101, 163, 170, 172, 150, 124, 0,
+    122, 135, 118, 85, 116, 120, 136, 147, 0, 0, 24, 21, 30, 51, 148, 151, 120, 33, 66, 79, 164, 95, 0,
+    50, 132, 130, 76, 117, 142, 120, 130, 137, 143, 0, 0, 25, 24, 48, 50, 147, 150, 145, 43, 120, 147, 0,
+    170, 136, 169, 155, 105, 132, 43, 118, 120, 143, 141, 153, 0, 0, 23, 23, 44, 46, 144, 158, 135, 149, 0,
+    110, 94, 122, 114, 149, 136, 74, 57, 92, 104, 99, 149, 166, 166, 0, 0, 25, 27, 61, 46, 143, 163, 0,
+    137, 151, 132, 64, 163, 174, 145, 74, 205, 91, 101, 88, 94, 95, 97, 95, 0, 0, 21, 26, 150, 39, 0,
+    149, 75, 89, 108, 111, 98, 19, 21, 80, 229, 26, 94, 100, 102, 106, 94, 110, 101, 0, 0, 21, 24, 0,
+    161, 38, 99, 110, 95, 112, 126, 94, 89, 63, 108, 228, 119, 111, 102, 99, 97, 105, 83, 99, 0, 0, 0,
+    24, 21, 155, 81, 112, 93, 71, 104, 111, 95, 111, 235, 64, 228, 105, 110, 113, 108, 98, 105, 112, 112, 0,
+    0, 0, 23, 20, 61, 92, 91, 69, 74, 107, 97, 98, 99, 117, 66, 92, 104, 104, 106, 106, 101, 74, 0,
+    86, 83, 0, 0, 21, 88, 83, 92, 95, 86, 94, 93, 86, 111, 98, 106, 86, 118, 110, 108, 113, 107, 0,
+    86, 83, 0, 0, 21, 88, 83, 92, 95, 86, 94, 93, 86, 111, 98, 106, 86, 118, 110, 108, 113, 107, 0,
+};
+
+
 static const struct iqa_ms_ssim_args args_wang = {
     1,  /* Wang */
     1,  /* Gaussian (default) */
@@ -134,6 +158,7 @@ static const struct answer ans_key_courtright[] = {
 #define BMP_CR_ORIGINAL "Courtright.bmp"
 #define BMP_CR_NOISE    "Courtright_Noise.bmp"
 
+static int _test_22x16(const char* str);
 static int _test_einstein_bmp(const struct answer *answers, const struct iqa_ms_ssim_args *args, const char* str);
 static int _test_courtright_bmp(const struct answer *answers, const struct iqa_ms_ssim_args *args, const char* str);
 
@@ -145,6 +170,7 @@ int test_ms_ssim()
     int failure = 0;
 
     printf("\nMS-SSIM:\n");
+    failure += _test_22x16("Too small");
     failure += _test_einstein_bmp(ans_key_einstein_def, 0, "Rouse/Hemami");
     failure += _test_einstein_bmp(ans_key_einstein_wang, &args_wang, "Wang");
     failure += _test_einstein_bmp(ans_key_einstein_linear, &args_linear, "Linear 8x8 Window");
@@ -152,6 +178,33 @@ int test_ms_ssim()
     failure += _test_courtright_bmp(ans_key_courtright, 0, "Rouse/Hemami");
 
     return failure;
+}
+
+/*----------------------------------------------------------------------------
+ * _test_22x16
+ *---------------------------------------------------------------------------*/
+int _test_22x16(const char* str)
+{
+    int passed, failures=0;
+    float result;
+    unsigned long long start, end;
+    unsigned char img_tmp[sizeof(img_22x16)];
+
+    printf("\t22x16 Image (%s):\n", str);
+
+    printf("\t  Identical: ");
+    memcpy(img_tmp, img_22x16, sizeof(img_22x16));
+    start = hpt_get_time();
+    result = iqa_ms_ssim(img_22x16, img_tmp, img_width, img_height, img_stride, 0);
+    end = hpt_get_time();
+    passed = result == INFINITY ? 1 : 0;
+    printf("\t\t%.5f  (%.3lf ms)\t%s\n", 
+        result, 
+        hpt_elapsed_time(start,end,hpt_get_frequency()) * 1000.0,
+        passed?"PASS":"FAILED");
+    failures += passed?0:1;
+
+    return failures;
 }
 
 /*----------------------------------------------------------------------------

@@ -13,7 +13,7 @@ BUILD:
       'Working Directory' to '$(OutDir)'. Then start the application.
 
   Linux:
-    - Change directories into the root of IQA.
+    - Change directories into the root of the IQA branch you want to build.
     - Type `make` for a debug build, or `make RELEASE=1` for a release build.
       The output is a static library 'libiqa.a'.
     - Type `make test` (or `make test RELEASE=1`) to build the unit tests.

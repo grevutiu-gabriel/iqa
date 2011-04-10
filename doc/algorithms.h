@@ -31,20 +31,49 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "iqa.h"
-
-/* MSE(a,b) = 1/N * SUM((a-b)^2) */
-float iqa_mse(const unsigned char *ref, const unsigned char *cmp, int w, int h, int stride)
-{
-    int error, offset;
-    unsigned long long sum=0;
-    int ww,hh;
-    for (hh=0; hh<h; ++hh) {
-        offset = hh*stride;
-        for (ww=0; ww<w; ++ww, ++offset) {
-            error = ref[offset] - cmp[offset];
-            sum += error * error;
-        }
-    }
-    return (float)( (double)sum / (double)(w*h) );
-}
+/**
+ * @page algorithms Algorithms
+ * All of the algorithms described here are called full-reference algorithms. This means they required the original undistorted image to compare the distorted image against.
+ * 
+ * <br>
+ * <hr>
+ * @section mse MSE
+ * Mean Squared Error is the average squared difference between a reference image and a distorted image. It is computed pixel-by-pixel by adding up the squared differences of all the pixels and dividing by the total pixel count.
+ *
+ * For images A = {a1 .. aM} and B = {b1 .. bM}, where M is the number of pixels:
+ * @image html mse_eq.jpg
+ * 
+ * The squaring of the differences dampens small differences between the 2 pixels but penalizes large ones. 
+ *
+ * More info: http://en.wikipedia.org/wiki/Mean_squared_error
+ *
+ * <br>
+ * <hr>
+ * @section psnr PSNR
+ * Peak Signal-to-Noise Ratio
+ *
+ * @image html psnr_eq.jpg
+ *
+ * More info: http://en.wikipedia.org/wiki/PSNR
+ *
+ * <br>
+ * <hr>
+ * @section ssim SSIM
+ * Structural SIMilarity
+ *
+ * Original paper: https://ece.uwaterloo.ca/~z70wang/publications/ssim.html
+ *
+ * <br>
+ * <hr>
+ * @section ms_ssim MS-SSIM
+ * Multi-Scale Structural SIMilarity
+ *
+ * Original paper: https://ece.uwaterloo.ca/~z70wang/publications/msssim.pdf
+ *
+ * <br>
+ * <hr>
+ * @section ms_ssim_star MS-SSIM*
+ *
+ * Original paper: http://foulard.ece.cornell.edu/publications/dmr_hvei2008_paper.pdf
+ *
+ */

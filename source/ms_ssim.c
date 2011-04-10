@@ -154,6 +154,16 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
             gammas = args->gammas;
     }
 
+    /* Make sure we won't scale below 1x1 */
+    cur_w = w;
+    cur_h = h;
+    for (idx=0; idx<scales; ++idx) {
+        if ( gauss ? cur_w<GAUSSIAN_LEN || cur_h<GAUSSIAN_LEN : cur_w<LPF_LEN || cur_h<LPF_LEN )
+            return INFINITY;
+        cur_w /= 2;
+        cur_h /= 2;
+    }
+
     window.kernel = (float*)g_square_window;
     window.w = window.h = SQUARE_LEN;
     window.normalized = 1;

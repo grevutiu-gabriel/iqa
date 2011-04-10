@@ -40,18 +40,18 @@
  * @li It must be accurate (results are checked against provided Matlab files in Octave).
  * @li It must be fast.
  * @li It must be portable.
- * @li It must be reliable (unit testing, Valgrind clean).
+ * @li It must be reliable (unit tested, Valgrind clean).
  * @li It must be well written, using straigh-forward algorithm implementations whenever possible.
  * @li It must be free (released under the BSD License).
  *
- * The following algorithms are currently implemented:
- * @li MSE
- * @li PSNR
- * @li SSIM
- * @li MS-SSIM
- * @li MS-SSIM*
+ * The following algorithms are implemented in the current release:
+ * @li @ref mse "MSE"
+ * @li @ref psnr "PSNR"
+ * @li @ref ssim "SSIM"
+ * @li @ref ms_ssim "MS-SSIM"
+ * @li @ref ms_ssim_star "MS-SSIM*"
  *
- * I plan to add the following algorithms in the future:
+ * Check out the @ref algorithms "algorithms" page for information about each one. I plan to add the following algorithms in the future:
  * @li Fast SSIM and MS-SSIM
  * @li CW-SSIM
  * @li VQM
@@ -61,42 +61,21 @@
  * @section Download
  * Source: http://sourceforge.net/projects/iqa/files/
  *
- * Browse the source tree: http://iqa.svn.sourceforge.net/viewvc/iqa/
+ * Browse the source tree: http://iqa.svn.sourceforge.net/viewvc/iqa/trunk
  *
- * SVN Checkout: @code svn co https://iqa.svn.sourceforge.net/svnroot/iqa iqa @endcode
+ * SVN Checkout: @code svn co https://iqa.svn.sourceforge.net/svnroot/iqa/trunk iqa @endcode
  * <br>
- * @section What's New 1.1.0
+ *
+ * @section get_started Getting Started
+ * @li @ref algorithms "Algorithm Information"
+ * @li @ref build "Building IQA"
+ * @li @ref sample_code "Sample Code"
+ *
+ * <br>
+ * @section what What's New in 1.1.0
  * @li Added MS-SSIM and MS-SSIM* algorithms.
  * @li Fixed a bug in SSIM when using custom stabilization constants.
+ *
  * <br>
- * @section Examples
  *
- * Here's a simple example showing how to calculate PSNR:
- *
- * @code
- * #include "iqa.h"
- *
- * // Load reference and modified images.
- *
- * float psnr = iqa_psnr(img_ref, img_mod, width, height, stride);
- * @endcode
- *
- * Some algorithms support additional configuration parameters. Here's an example that calculates the SSIM index using different weighting factors (a=0.5, b=1.34, c=0.5):
-  *
- * @code
- * #include "iqa.h"
- *
- * // Load reference and modified images.
- *
- * struct iqa_ssim_args args;
- * args.alpha = 0.5f;
- * args.beta  = 1.34f;
- * args.gamma = 0.5f;
- * args.L  = 255;   // default
- * args.K1 = 0.01;  // default
- * args.K2 = 0.03;  // default
- * args.f  = 0;     // default
- *
- * float ssim = iqa_ssim(img_ref, img_mod, width, height, stride, 1, &args);
- * @endcode
 */

@@ -31,20 +31,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "iqa.h"
-
-/* MSE(a,b) = 1/N * SUM((a-b)^2) */
-float iqa_mse(const unsigned char *ref, const unsigned char *cmp, int w, int h, int stride)
-{
-    int error, offset;
-    unsigned long long sum=0;
-    int ww,hh;
-    for (hh=0; hh<h; ++hh) {
-        offset = hh*stride;
-        for (ww=0; ww<w; ++ww, ++offset) {
-            error = ref[offset] - cmp[offset];
-            sum += error * error;
-        }
-    }
-    return (float)( (double)sum / (double)(w*h) );
-}
+/**
+ * @page build Building IQA
+ * All build artifacts end up in build/&lt;configuration&gt;, where &lt;configuration&gt; is 'debug' or 'release'.
+ *
+ * @section windows Windows
+ * @li Open iqa.sln, select 'Debug' or 'Release', and build. The output is a static library 'iqa.lib'.
+ * @li To run the tests under the debugger, first right-click the 'test' project, select Properties -&gt; Configuration Properties -&gt; Debugging and set 'Working Directory' to '$(OutDir)'. Then start the application.
+ *
+ * @section linux Linux
+ * @li Change directories into the root of the IQA branch you want to build.
+ * @li Type `make` for a debug build, or `make RELEASE=1` for a release build. The output is a static library 'libiqa.a'.
+ * @li Type `make test` (or `make test RELEASE=1`) to build the unit tests.
+ * @li Type `make clean` (or `make clean RELEASE=1`) to delete all build artifacts.
+ * @li To run the tests, `cd` to the build/&lt;configuration&gt; directory and type `./test`.
+ *
+ * @code
+ * > make clean
+ * > make
+ * > make test
+ * > cd ./build/debug
+ * > ./test
+ * @endcode
+ */

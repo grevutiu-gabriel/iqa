@@ -21,6 +21,9 @@ filter2(kernel_1x1, img_1x1, 'valid')
 disp("\n2x2 image with 1x1 kernel:");
 filter2(kernel_1x1, img_2x2, 'valid')
 
+disp("\n2x2 image with 3x3 kernel:");
+filter2(kernel_3x3, img_2x2, 'valid')
+
 disp("\n4x3 image with 2x2 kernel:");
 filter2(kernel_2x2, img_4x3, 'valid')
 
