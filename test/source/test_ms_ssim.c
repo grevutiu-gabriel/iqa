@@ -128,7 +128,7 @@ static const struct answer ans_key_einstein_linear[] = {
     {0.96774f, 5},  /* Contrast */
     {0.13595f, 5},  /* Flip Vertical */
     {0.93071f, 5},  /* Impulse */
-    {0.79850f, 3},  /* JPEG (rounding error on last digits) */
+    {0.79850f, 2},  /* JPEG (rounding error on last digits) */
     {0.99926f, 5},  /* Mean Shift */
 };
 
