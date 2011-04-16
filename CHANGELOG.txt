@@ -1,4 +1,11 @@
-2011-04-09  1.1.0
+2011-04-15  1.1.1 (rev 36)
+
+ - Added 64-bit build configurations on Windows.
+ - Fixed 64-bit rounding bug in tests (#3286061).
+ - Fixed MS-SSIM buffer overflow bug for images that don't scale to an even 
+   multiple of 2 (#3288043). Added corresponding unit test.
+
+2011-04-09  1.1.0 (rev 30)
 
  - Added MS-SSIM algorithm.
  - Added MS-SSIM* algorithm.
@@ -9,7 +16,7 @@
    there was no way for an application to determine if an error occurred.
  - Improved the performace of the decimate operation.
 
-2011-04-01  1.0.0
+2011-04-01  1.0.0 (rev 12)
 
  - First release. Supports MSE, PSNR, and SSIM.
 

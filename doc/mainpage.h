@@ -72,13 +72,18 @@
  * @li @ref sample_code "Sample Code"
  *
  * <br>
- * @section what What's New in 1.1.0
- * @li Added MS-SSIM and MS-SSIM* algorithms.
- * @li Fixed a bug in SSIM when using custom stabilization constants that caused inflated results.
- * @li Fixed a bug where SSIM returned NAN on error instead of INFINITY. NAN fails all comparisons, so it was impossible for an application to determine if an error occurred.
- * @li Increased the speed of image decimation.
- * @li Added more unit tests.
  *
+ * @section whos_using Who's Using IQA
+ * @li IQApp - A Windows command line tool for video quality assessment. http://tdistler.com/projects/iqapp
+ *
+ * <br>
+ *
+ * @section what What's New in 1.1.1
+ * @li Added 64-bit build configurations on Windows.
+ * @li Fixed 64-bit rounding bug in tests (#3286061).
+ * @li Fixed MS-SSIM buffer overflow bug for images that don't scale to an even multiple of 2 (#3288043). Added corresponding unit test.
+ *
+ * See CHANGELOG.txt for a detailed list of changes in each version.
  * <br>
  *
 */
