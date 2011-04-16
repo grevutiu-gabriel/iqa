@@ -111,8 +111,8 @@ int _alloc_buffers(float **buf, int w, int h, int scales)
             _free_buffers(buf, idx);
             return 1;
         }
-        cur_w/=2;
-        cur_h/=2;
+        cur_w = cur_w/2 + (cur_w&1);
+        cur_h = cur_h/2 + (cur_h&1);
     }
     return 0;
 }
@@ -264,8 +264,8 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
 
         if (msssim == INFINITY)
             break;
-        cur_w/=2;
-        cur_h/=2;
+        cur_w = cur_w/2 + (cur_w&1);
+        cur_h = cur_h/2 + (cur_h&1);
     }
 
     _free_buffers(ref_imgs, scales);
