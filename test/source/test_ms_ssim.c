@@ -147,6 +147,10 @@ static const struct answer ans_key_courtright[] = {
     {0.59030f, 5},    /* Noise */
 };
 
+static const struct answer ans_key_skate[] = {
+    {1.00000f, 5},    /* Identical */
+};
+
 
 #define BMP_ORIGINAL    "einstein.bmp"
 #define BMP_BLUR        "blur.bmp"
@@ -157,10 +161,12 @@ static const struct answer ans_key_courtright[] = {
 #define BMP_MEANSHIFT   "meanshift.bmp"
 #define BMP_CR_ORIGINAL "Courtright.bmp"
 #define BMP_CR_NOISE    "Courtright_Noise.bmp"
+#define BMP_SKATE       "skate_480x360.bmp"     /* Added for bug 3288043 */
 
 static int _test_22x16(const char* str);
 static int _test_einstein_bmp(const struct answer *answers, const struct iqa_ms_ssim_args *args, const char* str);
 static int _test_courtright_bmp(const struct answer *answers, const struct iqa_ms_ssim_args *args, const char* str);
+static int _test_skate_bmp(const struct answer *answers, const struct iqa_ms_ssim_args *args, const char* str);
 
 /*----------------------------------------------------------------------------
  * TEST ENTRY POINT
@@ -176,6 +182,7 @@ int test_ms_ssim()
     failure += _test_einstein_bmp(ans_key_einstein_linear, &args_linear, "Linear 8x8 Window");
     failure += _test_einstein_bmp(ans_key_einstein_scale4, &args_scale4, "Custom scale = 4");
     failure += _test_courtright_bmp(ans_key_courtright, 0, "Rouse/Hemami");
+    failure += _test_skate_bmp(ans_key_skate, 0, "Buffer overflow test");
 
     return failure;
 }
@@ -397,3 +404,37 @@ int _test_courtright_bmp(const struct answer *answers, const struct iqa_ms_ssim_
     return failures;
 }
 
+/*----------------------------------------------------------------------------
+ * _test_skate_bmp
+ *
+ * This test ensures MS-SSIM properly handles images that don't scale down
+ * to multiples of 2 (bug #3288043)
+ *---------------------------------------------------------------------------*/
+int _test_skate_bmp(const struct answer *answers, const struct iqa_ms_ssim_args *args, const char* str)
+{
+    struct bmp orig;
+    int passed, failures=0;
+    float result;
+    unsigned long long start, end;
+
+    printf("\tSkate 480x360 (%s):\n", str);
+
+    if (load_bmp(BMP_SKATE, &orig)) {
+        printf("FAILED to load \'%s\'\n", BMP_SKATE);
+        return 1;
+    }
+
+    printf("\t  Identical: ");
+    start = hpt_get_time();
+    result = iqa_ms_ssim(orig.img, orig.img, orig.w, orig.h, orig.stride, args);
+    end = hpt_get_time();
+    passed = _cmp_float(result, answers[0].value, answers[0].precision) ? 0 : 1;
+    printf("\t\t%.5f  (%.3lf ms)\t%s\n", 
+        result, 
+        hpt_elapsed_time(start,end,hpt_get_frequency()) * 1000.0,
+        passed?"PASS":"FAILED");
+    failures += passed?0:1;
+
+    free_bmp(&orig);
+    return failures;
+}
