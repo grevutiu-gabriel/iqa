@@ -1,3 +1,8 @@
+2011-07-??  1.1.2 (rev ??)
+
+ - Fixed MS-SSIM seg-fault issue when height greater than width (#3349231).
+ - Fixed linker warnings on Windows debug builds.
+
 2011-04-15  1.1.1 (rev 36)
 
  - Added 64-bit build configurations on Windows.

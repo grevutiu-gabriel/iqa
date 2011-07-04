@@ -189,7 +189,7 @@ float iqa_ms_ssim(const unsigned char *ref, const unsigned char *cmp, int w, int
         free(cmp_imgs);
         return INFINITY;
     }
-    if (_alloc_buffers(cmp_imgs, w, w, scales)) {
+    if (_alloc_buffers(cmp_imgs, w, h, scales)) {
         _free_buffers(ref_imgs, scales);
         free(ref_imgs);
         free(cmp_imgs);

@@ -41,8 +41,6 @@
  * @li It must be fast.
  * @li It must be portable.
  * @li It must be reliable (unit tested, Valgrind clean).
- * @li It must be well written, using straigh-forward algorithm implementations whenever possible.
- * @li It must be free (released under the BSD License).
  *
  * The following algorithms are implemented in the current release:
  * @li @ref mse "MSE"
@@ -51,13 +49,10 @@
  * @li @ref ms_ssim "MS-SSIM"
  * @li @ref ms_ssim_star "MS-SSIM*"
  *
- * Check out the @ref algorithms "algorithms" page for information about each one. I plan to add the following algorithms in the future:
- * @li Fast SSIM and MS-SSIM
- * @li CW-SSIM
- * @li VQM
+ * Check out the @ref algorithms "algorithms" page for information about each one.
  *
- * IQA exists because I was unable to find a quality, open-source C/C++ implementation of the SSIM algorithm that I could use commercially. I write cross-platform production code for a living, and I needed something I could rely on. Questions or suggestions are always welcome in the project forum (https://sourceforge.net/projects/iqa/support).
- * <br><br>
+ * <br>
+ *
  * @section Download
  * Source: http://sourceforge.net/projects/iqa/files/
  *
@@ -73,15 +68,14 @@
  *
  * <br>
  *
- * @section whos_using Who's Using IQA
- * @li IQApp - A Windows command line tool for video quality assessment. http://tdistler.com/projects/iqapp
+ * @section problems Having Problems?
+ * Submit a question or file a bug report at https://sourceforge.net/projects/iqa/support
  *
  * <br>
  *
- * @section what What's New in 1.1.1
- * @li Added 64-bit build configurations on Windows.
- * @li Fixed 64-bit rounding bug in tests (#3286061).
- * @li Fixed MS-SSIM buffer overflow bug for images that don't scale to an even multiple of 2 (#3288043). Added corresponding unit test.
+ * @section what What's New in 1.1.2
+ * @li Fixed Windows linker warnings for debug builds.
+ * @li Fixed seg-fault in MS-SSIM algorithm when height is greater than width (#3349231).
  *
  * See CHANGELOG.txt for a detailed list of changes in each version.
  * <br>

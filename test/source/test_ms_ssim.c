@@ -167,6 +167,7 @@ static int _test_22x16(const char* str);
 static int _test_einstein_bmp(const struct answer *answers, const struct iqa_ms_ssim_args *args, const char* str);
 static int _test_courtright_bmp(const struct answer *answers, const struct iqa_ms_ssim_args *args, const char* str);
 static int _test_skate_bmp(const struct answer *answers, const struct iqa_ms_ssim_args *args, const char* str);
+static int _test_h_greater_than_w(const char* str); /* Regression test for bug 3349231 */
 
 /*----------------------------------------------------------------------------
  * TEST ENTRY POINT
@@ -182,7 +183,8 @@ int test_ms_ssim()
     failure += _test_einstein_bmp(ans_key_einstein_linear, &args_linear, "Linear 8x8 Window");
     failure += _test_einstein_bmp(ans_key_einstein_scale4, &args_scale4, "Custom scale = 4");
     failure += _test_courtright_bmp(ans_key_courtright, 0, "Rouse/Hemami");
-    failure += _test_skate_bmp(ans_key_skate, 0, "Buffer overflow test");
+    failure += _test_skate_bmp(ans_key_skate, 0, "Buffer overflow [#3288043]");
+    failure += _test_h_greater_than_w("Height greater than width [#3349231]");
 
     return failure;
 }
@@ -429,6 +431,38 @@ int _test_skate_bmp(const struct answer *answers, const struct iqa_ms_ssim_args 
     result = iqa_ms_ssim(orig.img, orig.img, orig.w, orig.h, orig.stride, args);
     end = hpt_get_time();
     passed = _cmp_float(result, answers[0].value, answers[0].precision) ? 0 : 1;
+    printf("\t\t%.5f  (%.3lf ms)\t%s\n", 
+        result, 
+        hpt_elapsed_time(start,end,hpt_get_frequency()) * 1000.0,
+        passed?"PASS":"FAILED");
+    failures += passed?0:1;
+
+    free_bmp(&orig);
+    return failures;
+}
+
+/*----------------------------------------------------------------------------
+ * _test_h_greater_than_w
+ *---------------------------------------------------------------------------*/
+int _test_h_greater_than_w(const char* str)
+{
+    struct bmp orig;
+    int passed, failures=0;
+    float result;
+    unsigned long long start, end;
+
+    printf("\tSkate 360x480 (%s):\n", str);
+
+    if (load_bmp(BMP_SKATE, &orig)) {
+        printf("FAILED to load \'%s\'\n", BMP_SKATE);
+        return 1;
+    }
+
+    printf("\t  Identical: ");
+    start = hpt_get_time();
+    result = iqa_ms_ssim(orig.img, orig.img, orig.h, orig.w, orig.h, 0); /* Flip width and height for test */
+    end = hpt_get_time();
+    passed = _cmp_float(result, 1.0f, 5) ? 0 : 1;
     printf("\t\t%.5f  (%.3lf ms)\t%s\n", 
         result, 
         hpt_elapsed_time(start,end,hpt_get_frequency()) * 1000.0,
